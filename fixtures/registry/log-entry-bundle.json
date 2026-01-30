@@ -1,0 +1,16 @@
+{
+  "types": [
+    {
+      "type_id": "com.example.LogEntry",
+      "type_version": 1,
+      "description": "Structured log entry with level, message, and tags",
+      "fields": [
+        {"tag": 1, "name": "timestamp", "type": "uint64", "semantic": "unix_ms", "required": true},
+        {"tag": 2, "name": "level", "type": "uint8", "semantic": "enum", "required": true},
+        {"tag": 3, "name": "message", "type": "string", "required": true},
+        {"tag": 4, "name": "tags", "type": "map", "required": false}
+      ]
+    }
+  ],
+  "renderers": []
+}

@@ -1,0 +1,24 @@
+# CXDB Agent Integration Configuration
+
+[cxdb]
+# HTTP API endpoint
+http_url = "http://localhost:9010"
+
+# Binary protocol endpoint (not used in this example)
+binary_url = "localhost:9009"
+
+[agent]
+# Agent identification
+name = "example-agent"
+version = "1.0.0"
+
+# Behavior
+max_retries = 3
+timeout_seconds = 30
+
+[logging]
+# Log level: debug, info, warn, error
+level = "info"
+
+# Log conversation turns to stdout
+verbose = true

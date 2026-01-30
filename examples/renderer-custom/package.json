@@ -1,0 +1,26 @@
+{
+  "name": "@cxdb/renderer-logentry",
+  "version": "1.0.0",
+  "description": "Custom CXDB renderer for LogEntry types",
+  "main": "dist/renderer.js",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "cxdb",
+    "renderer",
+    "logentry"
+  ],
+  "author": "StrongDM Inc",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  }
+}

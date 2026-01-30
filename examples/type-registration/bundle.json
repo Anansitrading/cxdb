@@ -1,0 +1,43 @@
+{
+  "registry_version": 1,
+  "bundle_id": "com.example.logs-v1",
+  "types": {
+    "com.example.LogEntry": {
+      "versions": {
+        "1": {
+          "fields": {
+            "1": {
+              "name": "timestamp",
+              "type": "u64",
+              "semantic": "unix_ms"
+            },
+            "2": {
+              "name": "level",
+              "type": "u8",
+              "enum": "com.example.LogLevel"
+            },
+            "3": {
+              "name": "message",
+              "type": "string"
+            },
+            "4": {
+              "name": "tags",
+              "type": "map",
+              "key_type": "string",
+              "value_type": "string",
+              "optional": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "enums": {
+    "com.example.LogLevel": {
+      "0": "DEBUG",
+      "1": "INFO",
+      "2": "WARN",
+      "3": "ERROR"
+    }
+  }
+}

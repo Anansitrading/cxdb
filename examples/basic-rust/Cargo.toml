@@ -1,0 +1,12 @@
+[package]
+name = "basic-rust-example"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "basic-rust"
+path = "main.rs"
+
+[dependencies]
+cxdb = { path = "../../clients/rust" }
+serde = { version = "1.0", features = ["derive"] }
