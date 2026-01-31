@@ -1,17 +1,61 @@
-// Copyright 2025 StrongDM Inc
-// SPDX-License-Identifier: Apache-2.0
-
-'use client';
-
-export const Database = (props: any) => null;
-export const Layers = (props: any) => null;
-export const Plus = (props: any) => null;
-export const X = (props: any) => null;
-export const AlertCircle = (props: any) => null;
-export const Check = (props: any) => null;
-export const Zap = (props: any) => null;
-export const Radio = (props: any) => null;
-export const ChevronDown = (props: any) => null;
-export const Filter = (props: any) => null;
-export const LogIn = (props: any) => null;
-export const Lock = (props: any) => null;
+// Re-export icons from lucide-react for consistent usage
+export {
+  AlertCircle,
+  AlertOctagon,
+  AlertTriangle,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  AtSign,
+  Brain,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Circle,
+  Clock,
+  Copy,
+  Database,
+  ExternalLink,
+  File,
+  FileJson,
+  FileText,
+  Filter,
+  Folder,
+  GitBranch,
+  GitCommit,
+  GitFork,
+  Hash,
+  Image,
+  Info,
+  Layers,
+  Link2,
+  Loader2,
+  Lock,
+  Mail,
+  MessageSquare,
+  MoreHorizontal,
+  Network,
+  Palette,
+  Plus,
+  Radio,
+  RefreshCw,
+  Search,
+  Settings,
+  Share2,
+  Tag,
+  Terminal,
+  Trash2,
+  Type,
+  User,
+  UserMinus,
+  Wifi,
+  WifiOff,
+  Wrench,
+  X,
+  XCircle,
+  Zap,
+} from 'lucide-react';

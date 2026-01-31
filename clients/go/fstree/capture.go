@@ -257,7 +257,7 @@ func hashFile(path string) ([32]byte, error) {
 	if err != nil {
 		return [32]byte{}, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	h := blake3.New()
 	if _, err := io.Copy(h, f); err != nil {

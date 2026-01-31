@@ -25,7 +25,7 @@ async function globalSetup() {
   console.log('Building Go writer client...');
   try {
     execSync('go build -o cxdb-writer .', {
-      cwd: join(PROJECT_ROOT, 'examples', 'source'),
+      cwd: join(PROJECT_ROOT, 'examples', 'basic-go'),
       stdio: 'inherit',
     });
     console.log('Go writer built successfully.');
@@ -35,8 +35,8 @@ async function globalSetup() {
   }
 
   // Verify binaries exist
-  const serverBinary = join(PROJECT_ROOT, 'target', 'release', 'ai-cxdb-store');
-  const writerBinary = join(PROJECT_ROOT, 'cxdb-writer');
+  const serverBinary = join(PROJECT_ROOT, 'target', 'release', 'cxdb-server');
+  const writerBinary = join(PROJECT_ROOT, 'examples', 'basic-go', 'cxdb-writer');
 
   try {
     execSync(`test -f "${serverBinary}"`, { stdio: 'ignore' });

@@ -211,7 +211,7 @@ func TestSnapshot_GetFileAtPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetFileAtPath failed: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if entry.Name != "main.go" {
 		t.Errorf("expected name 'main.go', got '%s'", entry.Name)

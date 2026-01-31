@@ -147,7 +147,7 @@ func Dial(addr string, opts ...Option) (*Client, error) {
 
 	// Send HELLO to establish session
 	if err := client.sendHello(options.clientTag); err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, fmt.Errorf("cxdb hello: %w", err)
 	}
 
@@ -179,7 +179,7 @@ func DialTLS(addr string, opts ...Option) (*Client, error) {
 
 	// Send HELLO to establish session
 	if err := client.sendHello(options.clientTag); err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, fmt.Errorf("cxdb hello: %w", err)
 	}
 

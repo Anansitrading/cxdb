@@ -1,4 +1,18 @@
-// Copyright 2025 StrongDM Inc
-// SPDX-License-Identifier: Apache-2.0
-export function ConnectionStatus(props: any) { return null; }
-export function ActivityFeed(props: any) { return null; }
+export { PresenceIndicator, PresenceBadge } from './PresenceIndicator';
+export type { PresenceState } from './PresenceIndicator';
+
+export { LiveTimestamp, CompactTimestamp } from './LiveTimestamp';
+
+export { FollowIndicator, MinimalFollowIndicator } from './FollowIndicator';
+
+export { ConnectionStatus, LiveGlow } from './ConnectionStatus';
+
+export { ActivityFeed, ActivitySpark } from './ActivityFeed';
+
+export {
+  StreamingCursor,
+  StreamingBadge,
+  StreamingProgress,
+  ToolRunningIndicator,
+  ThinkingDots,
+} from './StreamingIndicator';

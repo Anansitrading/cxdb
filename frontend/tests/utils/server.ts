@@ -81,7 +81,7 @@ export async function waitForServer(port: number, timeout: number = 15000): Prom
  */
 export async function startServer(): Promise<ServerHandle> {
   const projectRoot = join(__dirname, '..', '..', '..');
-  const serverBinary = join(projectRoot, 'target', 'release', 'ai-cxdb-store');
+  const serverBinary = join(projectRoot, 'target', 'release', 'cxdb-server');
 
   // Create temp data directory
   const dataDir = mkdtempSync(join(tmpdir(), 'cxdb-test-'));
@@ -158,7 +158,7 @@ export function buildServer(): void {
  */
 export function serverBinaryExists(): boolean {
   const projectRoot = join(__dirname, '..', '..', '..');
-  const serverBinary = join(projectRoot, 'target', 'release', 'ai-cxdb-store');
+  const serverBinary = join(projectRoot, 'target', 'release', 'cxdb-server');
   try {
     execSync(`test -f "${serverBinary}"`);
     return true;

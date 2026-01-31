@@ -269,7 +269,7 @@ func (rc *ReconnectingClient) reconnect(ctx context.Context) error {
 
 		// Close old connection
 		if rc.client != nil {
-			rc.client.Close()
+			_ = rc.client.Close()
 			rc.client = nil
 		}
 

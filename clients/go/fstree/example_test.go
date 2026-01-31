@@ -15,7 +15,7 @@ import (
 func Example() {
 	// Create a temp workspace
 	tmpDir, _ := os.MkdirTemp("", "workspace")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	_ = os.MkdirAll(filepath.Join(tmpDir, "src"), 0755)
 	_ = os.WriteFile(filepath.Join(tmpDir, "README.md"), []byte("# My Project"), 0644)
@@ -43,7 +43,7 @@ func Example() {
 
 func Example_tracker() {
 	tmpDir, _ := os.MkdirTemp("", "workspace")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 	_ = os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("v1"), 0644)
 
 	// Create tracker for incremental snapshots
@@ -67,7 +67,7 @@ func Example_tracker() {
 
 func Example_diff() {
 	tmpDir, _ := os.MkdirTemp("", "workspace")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Initial state
 	_ = os.WriteFile(filepath.Join(tmpDir, "keep.txt"), []byte("keep"), 0644)

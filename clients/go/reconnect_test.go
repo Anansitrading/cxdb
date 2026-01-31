@@ -322,7 +322,7 @@ func TestReconnectingClient_InitialConnection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	if rc.SessionID() != 1 {
 		t.Errorf("Expected session ID 1, got %d", rc.SessionID())
@@ -339,7 +339,7 @@ func TestReconnectingClient_QueueLength(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	if rc.QueueLength() != 0 {
 		t.Errorf("Expected queue length 0, got %d", rc.QueueLength())
@@ -376,7 +376,7 @@ func TestReconnectingClient_ContextCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	// Create a context that's already cancelled
 	ctx, cancel := context.WithCancel(context.Background())
@@ -397,7 +397,7 @@ func TestReconnectingClient_QueueFull(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	// Block the sender by filling the queue
 	// We need to pause the sender first
@@ -447,7 +447,7 @@ func TestReconnectingClient_ReconnectOnFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	// Track reconnection
 	var reconnectCount atomic.Int32
@@ -493,7 +493,7 @@ func TestReconnect_ExponentialBackoff(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	// Now set up to fail reconnection attempts 3 times
 	dialer.resetDialCount()
@@ -534,7 +534,7 @@ func TestReconnect_MaxRetriesExceeded(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	// Now make all reconnection attempts fail
 	dialer.resetDialCount()
@@ -563,7 +563,7 @@ func TestReconnect_ContextCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	// Now make all reconnection attempts fail
 	dialer.resetDialCount()
@@ -599,7 +599,7 @@ func TestReconnect_OnReconnectCallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	// Reset for reconnect test
 	dialer.resetDialCount()
@@ -704,7 +704,7 @@ func TestReconnectingClient_EnqueueAndProcess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	// Test successful operation
 	var opCalled atomic.Bool
@@ -729,7 +729,7 @@ func TestReconnectingClient_EnqueueWithError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	expectedErr := errors.New("operation failed")
 	ctx := context.Background()
@@ -748,7 +748,7 @@ func TestReconnectingClient_ConcurrentOperations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	const numOps = 100
 	var wg sync.WaitGroup
@@ -815,7 +815,7 @@ func TestReconnectingClient_DrainOnClose(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	// Close the client - this should cancel the context and drain pending requests
-	rc.Close()
+	_ = rc.Close()
 
 	// Wait for all operations to complete
 	wg.Wait()
@@ -838,7 +838,7 @@ func TestReconnectingClient_SessionIDAfterReconnect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	initialSessionID := rc.SessionID()
 	if initialSessionID != 1 {
@@ -869,7 +869,7 @@ func TestReconnectingClient_ClientTagPreserved(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	tag := rc.ClientTag()
 	if tag != "test" {
@@ -883,7 +883,7 @@ func TestReconnectingClient_NilClientAfterFailedReconnect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	// Make all future dials fail
 	dialer.mu.Lock()

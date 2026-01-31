@@ -27,7 +27,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "dial error: %v\n", err)
 		os.Exit(1)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	turns, err := client.GetLast(context.Background(), *contextID, cxdb.GetLastOptions{Limit: 1, IncludePayload: true})
 	if err != nil {

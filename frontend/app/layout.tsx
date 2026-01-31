@@ -1,6 +1,3 @@
-// Copyright 2025 StrongDM Inc
-// SPDX-License-Identifier: Apache-2.0
-
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/lib/themes';

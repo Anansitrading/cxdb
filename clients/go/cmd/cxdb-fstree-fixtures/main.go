@@ -33,7 +33,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "tmpdir: %v\n", err)
 		os.Exit(1)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := seedWorkspace(tmpDir); err != nil {
 		fmt.Fprintf(os.Stderr, "seed workspace: %v\n", err)

@@ -1,6 +1,3 @@
-// Copyright 2025 StrongDM Inc
-// SPDX-License-Identifier: Apache-2.0
-
 /**
  * Theme color definitions for the CXDB frontend
  * All colors are hex strings that get applied to CSS variables

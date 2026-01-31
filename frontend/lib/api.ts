@@ -1,6 +1,3 @@
-// Copyright 2025 StrongDM Inc
-// SPDX-License-Identifier: Apache-2.0
-
 import type { TurnResponse, FetchTurnsOptions, ErrorResponse, ContextEntry, SessionInfo, Provenance } from '@/types';
 import type { FsListResponse, FsFileResponse } from '@/types/filesystem';
 

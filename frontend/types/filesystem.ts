@@ -1,10 +1,27 @@
-// Copyright 2025 StrongDM Inc
-// SPDX-License-Identifier: Apache-2.0
+// Filesystem snapshot types for CXDB
+
+export interface FsEntry {
+  name: string;
+  kind: 'file' | 'dir' | 'symlink';
+  mode: string;
+  size: number;
+  hash: string;
+}
 
 export interface FsListResponse {
-  files: string[];
+  turn_id: string;
+  path: string;
+  fs_root_hash: string;
+  entries: FsEntry[];
 }
 
 export interface FsFileResponse {
-  content: string;
+  turn_id: string;
+  path: string;
+  name: string;
+  kind: string;
+  mode: string;
+  size: number;
+  hash: string;
+  content_base64: string;
 }

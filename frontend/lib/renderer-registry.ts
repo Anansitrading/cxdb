@@ -1,6 +1,3 @@
-// Copyright 2025 StrongDM Inc
-// SPDX-License-Identifier: Apache-2.0
-
 /**
  * Runtime renderer registry for dynamically loading turn renderers.
  *
@@ -92,14 +89,9 @@ const BUILTIN_RENDERERS: Record<string, () => Promise<{ default: ComponentType<T
 /**
  * Origins allowed to load external ESM modules from.
  * This is a security measure to prevent loading arbitrary code.
- *
- * For self-hosted renderers, configure via CXDB_RENDERER_CDN environment variable
- * in the gateway, which sets the ALLOWED_RENDERER_ORIGINS value.
- *
- * Default public CDNs provided for convenience (esm.sh, jsdelivr, unpkg).
- * For production deployments with custom renderers, add your CDN origin.
  */
 const ALLOWED_ORIGINS: string[] = [
+  'https://cdn.strongdm.ai',
   'https://esm.sh',
   'https://cdn.jsdelivr.net',
   'https://unpkg.com',

@@ -5,8 +5,8 @@ import { execSync, ExecSyncOptionsWithStringEncoding } from 'child_process';
 import { join } from 'path';
 
 const PROJECT_ROOT = join(__dirname, '..', '..', '..');
-const GO_SOURCE_DIR = join(PROJECT_ROOT, 'examples', 'source');
-const GO_BINARY = join(PROJECT_ROOT, 'cxdb-writer');
+const GO_SOURCE_DIR = join(PROJECT_ROOT, 'examples', 'basic-go');
+const GO_BINARY = join(GO_SOURCE_DIR, 'cxdb-writer');
 
 export interface CreateContextResult {
   contextId: number;

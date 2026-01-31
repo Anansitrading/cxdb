@@ -121,8 +121,8 @@ func TestWithWriterIdentity(t *testing.T) {
 
 func TestWithEnvVars(t *testing.T) {
 	// Set some test env vars
-	os.Setenv("TEST_PROV_VAR", "test-value")
-	defer os.Unsetenv("TEST_PROV_VAR")
+	_ = os.Setenv("TEST_PROV_VAR", "test-value")
+	defer func() { _ = os.Unsetenv("TEST_PROV_VAR") }()
 
 	p := NewProvenance(nil, WithEnvVars([]string{"TEST_PROV_VAR", "NONEXISTENT_VAR"}))
 
@@ -139,8 +139,8 @@ func TestWithEnvVars(t *testing.T) {
 
 func TestWithEnvVarsDefaultAllowlist(t *testing.T) {
 	// Set a var from the default allowlist
-	os.Setenv("HOSTNAME", "test-host")
-	defer os.Unsetenv("HOSTNAME")
+	_ = os.Setenv("HOSTNAME", "test-host")
+	defer func() { _ = os.Unsetenv("HOSTNAME") }()
 
 	p := NewProvenance(nil, WithEnvVars(nil)) // nil = use default
 

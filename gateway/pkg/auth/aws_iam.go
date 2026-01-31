@@ -111,7 +111,7 @@ func (e *AWSTokenExchanger) TokenHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(TokenExchangeResponse{
+	_ = json.NewEncoder(w).Encode(TokenExchangeResponse{
 		Token:     token,
 		ExpiresAt: expiresAt,
 		TokenType: "Bearer",
@@ -169,7 +169,7 @@ func (e *AWSTokenExchanger) verifyPresignedURL(presignedURL string) (*STSIdentit
 	if err != nil {
 		return nil, fmt.Errorf("execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)

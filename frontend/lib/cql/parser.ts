@@ -1,6 +1,3 @@
-// Copyright 2025 StrongDM Inc
-// SPDX-License-Identifier: Apache-2.0
-
 /**
  * CQL Parser - Recursive descent parser for CQL queries
  *
