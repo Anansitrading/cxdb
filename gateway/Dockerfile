@@ -46,7 +46,18 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # ============================================
 # Stage 3: Minimal runtime image
 # ============================================
-FROM --platform=linux/amd64 gcr.io/distroless/base-debian12:nonroot
+FROM --platform=linux/amd64 debian:bookworm-slim
+
+# Install curl for healthchecks and ca-certificates for HTTPS
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -r -u 65532 -g nogroup nonroot
+USER nonroot
+
 WORKDIR /app
 
 ENV PORT=8080
