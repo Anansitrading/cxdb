@@ -171,9 +171,9 @@ func TestSnapshot_Diff(t *testing.T) {
 	}
 
 	// Modify state
-	os.WriteFile(filepath.Join(tmpDir, "modify.txt"), []byte("modified"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, "new.txt"), []byte("new file"), 0644)
-	os.Remove(filepath.Join(tmpDir, "delete.txt"))
+	_ = os.WriteFile(filepath.Join(tmpDir, "modify.txt"), []byte("modified"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "new.txt"), []byte("new file"), 0644)
+	_ = os.Remove(filepath.Join(tmpDir, "delete.txt"))
 
 	snap2, err := Capture(tmpDir)
 	if err != nil {
@@ -223,7 +223,7 @@ func TestSnapshot_GetFileAtPath(t *testing.T) {
 
 func TestTracker_SnapshotIfChanged(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("content"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("content"), 0644)
 
 	tracker := NewTracker(tmpDir)
 

@@ -44,7 +44,7 @@ func Example() {
 func Example_tracker() {
 	tmpDir, _ := os.MkdirTemp("", "workspace")
 	defer os.RemoveAll(tmpDir)
-	os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("v1"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("v1"), 0644)
 
 	// Create tracker for incremental snapshots
 	tracker := fstree.NewTracker(tmpDir)
@@ -58,7 +58,7 @@ func Example_tracker() {
 	fmt.Printf("Snapshot 2: changed=%v, snap=%v\n", changed, snap2 == nil)
 
 	// Modify file
-	os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("v2"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("v2"), 0644)
 
 	// Detects change
 	snap3, changed, _ := tracker.SnapshotIfChanged()
@@ -70,16 +70,16 @@ func Example_diff() {
 	defer os.RemoveAll(tmpDir)
 
 	// Initial state
-	os.WriteFile(filepath.Join(tmpDir, "keep.txt"), []byte("keep"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, "modify.txt"), []byte("v1"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, "delete.txt"), []byte("bye"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "keep.txt"), []byte("keep"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "modify.txt"), []byte("v1"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "delete.txt"), []byte("bye"), 0644)
 
 	snap1, _ := fstree.Capture(tmpDir)
 
 	// Make changes
-	os.WriteFile(filepath.Join(tmpDir, "modify.txt"), []byte("v2"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, "new.txt"), []byte("hello"), 0644)
-	os.Remove(filepath.Join(tmpDir, "delete.txt"))
+	_ = os.WriteFile(filepath.Join(tmpDir, "modify.txt"), []byte("v2"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "new.txt"), []byte("hello"), 0644)
+	_ = os.Remove(filepath.Join(tmpDir, "delete.txt"))
 
 	snap2, _ := fstree.Capture(tmpDir)
 
