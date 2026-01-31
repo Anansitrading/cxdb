@@ -21,7 +21,12 @@ pub struct AppendRequest {
 }
 
 impl AppendRequest {
-    pub fn new(context_id: u64, type_id: impl Into<String>, type_version: u32, payload: Vec<u8>) -> Self {
+    pub fn new(
+        context_id: u64,
+        type_id: impl Into<String>,
+        type_version: u32,
+        payload: Vec<u8>,
+    ) -> Self {
         Self {
             context_id,
             parent_turn_id: 0,
@@ -161,9 +166,8 @@ fn parse_turn_records(payload: &[u8]) -> Result<Vec<TurnRecord>> {
         let type_len = cursor.read_u32::<LittleEndian>()? as usize;
         let mut type_bytes = vec![0u8; type_len];
         cursor.read_exact(&mut type_bytes)?;
-        let type_id = String::from_utf8(type_bytes).map_err(|_| {
-            Error::invalid_response("type_id not utf8")
-        })?;
+        let type_id = String::from_utf8(type_bytes)
+            .map_err(|_| Error::invalid_response("type_id not utf8"))?;
 
         let type_version = cursor.read_u32::<LittleEndian>()?;
         let encoding = cursor.read_u32::<LittleEndian>()?;
@@ -199,21 +203,35 @@ mod tests {
     use crate::test_util::{decode_hex, load_fixture};
 
     fn build_append_payload(req: &AppendRequest) -> Vec<u8> {
-        let encoding = if req.encoding == 0 { ENCODING_MSGPACK } else { req.encoding };
+        let encoding = if req.encoding == 0 {
+            ENCODING_MSGPACK
+        } else {
+            req.encoding
+        };
         let hash = blake3::hash(&req.payload);
         let mut payload = Vec::new();
         payload.write_u64::<LittleEndian>(req.context_id).unwrap();
-        payload.write_u64::<LittleEndian>(req.parent_turn_id).unwrap();
-        payload.write_u32::<LittleEndian>(req.type_id.len() as u32).unwrap();
+        payload
+            .write_u64::<LittleEndian>(req.parent_turn_id)
+            .unwrap();
+        payload
+            .write_u32::<LittleEndian>(req.type_id.len() as u32)
+            .unwrap();
         payload.extend_from_slice(req.type_id.as_bytes());
         payload.write_u32::<LittleEndian>(req.type_version).unwrap();
         payload.write_u32::<LittleEndian>(encoding).unwrap();
         payload.write_u32::<LittleEndian>(req.compression).unwrap();
-        payload.write_u32::<LittleEndian>(req.payload.len() as u32).unwrap();
+        payload
+            .write_u32::<LittleEndian>(req.payload.len() as u32)
+            .unwrap();
         payload.extend_from_slice(hash.as_bytes());
-        payload.write_u32::<LittleEndian>(req.payload.len() as u32).unwrap();
+        payload
+            .write_u32::<LittleEndian>(req.payload.len() as u32)
+            .unwrap();
         payload.extend_from_slice(&req.payload);
-        payload.write_u32::<LittleEndian>(req.idempotency_key.len() as u32).unwrap();
+        payload
+            .write_u32::<LittleEndian>(req.idempotency_key.len() as u32)
+            .unwrap();
         if !req.idempotency_key.is_empty() {
             payload.extend_from_slice(&req.idempotency_key);
         }

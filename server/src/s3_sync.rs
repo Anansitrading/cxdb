@@ -333,10 +333,8 @@ impl S3Sync {
             let entry = entry?;
             let path = entry.path();
             if path.extension().map(|e| e == "json").unwrap_or(false) {
-                let relative_path = format!(
-                    "registry/{}",
-                    path.file_name().unwrap().to_string_lossy()
-                );
+                let relative_path =
+                    format!("registry/{}", path.file_name().unwrap().to_string_lossy());
                 let current_size = fs::metadata(&path)?.len();
                 let last_size = state.file_sizes.get(&relative_path).copied().unwrap_or(0);
 

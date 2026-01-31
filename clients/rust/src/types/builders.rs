@@ -33,7 +33,10 @@ pub fn new_user_input(text: impl Into<String>, files: Vec<String>) -> Conversati
         status: ItemStatusComplete.to_string(),
         timestamp: Now(),
         id: String::new(),
-        user_input: Some(UserInput { text: text.into(), files }),
+        user_input: Some(UserInput {
+            text: text.into(),
+            files,
+        }),
         turn: None,
         system: None,
         handoff: None,
@@ -164,7 +167,11 @@ impl AssistantTurnBuilder {
     }
 }
 
-pub fn new_tool_call_item(id: impl Into<String>, name: impl Into<String>, args: impl Into<String>) -> ToolCallItem {
+pub fn new_tool_call_item(
+    id: impl Into<String>,
+    name: impl Into<String>,
+    args: impl Into<String>,
+) -> ToolCallItem {
     ToolCallItem {
         id: id.into(),
         name: name.into(),
@@ -183,7 +190,11 @@ pub struct ToolCallItemBuilder {
     item: ToolCallItem,
 }
 
-pub fn build_tool_call_item(id: impl Into<String>, name: impl Into<String>, args: impl Into<String>) -> ToolCallItemBuilder {
+pub fn build_tool_call_item(
+    id: impl Into<String>,
+    name: impl Into<String>,
+    args: impl Into<String>,
+) -> ToolCallItemBuilder {
     ToolCallItemBuilder {
         item: new_tool_call_item(id, name, args),
     }
@@ -200,7 +211,11 @@ impl ToolCallItemBuilder {
         self
     }
 
-    pub fn with_streaming_output(&mut self, output: impl Into<String>, truncated: bool) -> &mut Self {
+    pub fn with_streaming_output(
+        &mut self,
+        output: impl Into<String>,
+        truncated: bool,
+    ) -> &mut Self {
         self.item.streaming_output = output.into();
         self.item.streaming_output_truncated = truncated;
         self
@@ -438,7 +453,11 @@ impl AssistantBuilder {
     }
 }
 
-pub fn new_tool_call(call_id: impl Into<String>, name: impl Into<String>, args: impl Into<String>) -> ConversationItem {
+pub fn new_tool_call(
+    call_id: impl Into<String>,
+    name: impl Into<String>,
+    args: impl Into<String>,
+) -> ConversationItem {
     ConversationItem {
         item_type: ItemTypeToolCall.to_string(),
         status: ItemStatusPending.to_string(),
@@ -464,7 +483,11 @@ pub struct ToolCallBuilder {
     item: ConversationItem,
 }
 
-pub fn build_tool_call(call_id: impl Into<String>, name: impl Into<String>, args: impl Into<String>) -> ToolCallBuilder {
+pub fn build_tool_call(
+    call_id: impl Into<String>,
+    name: impl Into<String>,
+    args: impl Into<String>,
+) -> ToolCallBuilder {
     ToolCallBuilder {
         item: new_tool_call(call_id, name, args),
     }
@@ -488,7 +511,11 @@ impl ToolCallBuilder {
     }
 }
 
-pub fn new_tool_result(call_id: impl Into<String>, content: impl Into<String>, is_error: bool) -> ConversationItem {
+pub fn new_tool_result(
+    call_id: impl Into<String>,
+    content: impl Into<String>,
+    is_error: bool,
+) -> ConversationItem {
     ConversationItem {
         item_type: ItemTypeToolResult.to_string(),
         status: ItemStatusComplete.to_string(),
@@ -517,7 +544,10 @@ pub struct ToolResultBuilder {
     item: ConversationItem,
 }
 
-pub fn build_tool_result(call_id: impl Into<String>, content: impl Into<String>) -> ToolResultBuilder {
+pub fn build_tool_result(
+    call_id: impl Into<String>,
+    content: impl Into<String>,
+) -> ToolResultBuilder {
     ToolResultBuilder {
         item: new_tool_result(call_id, content, false),
     }

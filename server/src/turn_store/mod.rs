@@ -516,7 +516,12 @@ impl TurnStore {
         Ok(results)
     }
 
-    pub fn get_before(&self, context_id: u64, before_turn_id: u64, limit: u32) -> Result<Vec<TurnRecord>> {
+    pub fn get_before(
+        &self,
+        context_id: u64,
+        before_turn_id: u64,
+        limit: u32,
+    ) -> Result<Vec<TurnRecord>> {
         let head = self
             .heads
             .get(&context_id)

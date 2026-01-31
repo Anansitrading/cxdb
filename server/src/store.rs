@@ -124,7 +124,8 @@ impl Store {
         }
 
         // Build secondary indexes from the cache
-        self.secondary_indexes.build_from_cache(&self.context_metadata_cache, &heads);
+        self.secondary_indexes
+            .build_from_cache(&self.context_metadata_cache, &heads);
     }
 
     /// Get cached context metadata, loading from first turn if not cached.
@@ -136,7 +137,8 @@ impl Store {
 
         // Try to load from first turn (depth=0)
         let metadata = self.load_context_metadata(context_id);
-        self.context_metadata_cache.insert(context_id, metadata.clone());
+        self.context_metadata_cache
+            .insert(context_id, metadata.clone());
         metadata
     }
 
@@ -150,10 +152,16 @@ impl Store {
 
     /// Update the metadata cache when a new first turn is appended.
     /// Returns the extracted metadata if this is the first turn (depth=0).
-    fn maybe_cache_metadata(&mut self, context_id: u64, depth: u32, payload: &[u8]) -> Option<ContextMetadata> {
+    fn maybe_cache_metadata(
+        &mut self,
+        context_id: u64,
+        depth: u32,
+        payload: &[u8],
+    ) -> Option<ContextMetadata> {
         if depth == 0 {
             let metadata = extract_context_metadata(payload);
-            self.context_metadata_cache.insert(context_id, metadata.clone());
+            self.context_metadata_cache
+                .insert(context_id, metadata.clone());
             metadata
         } else {
             None
@@ -199,7 +207,9 @@ impl Store {
         };
 
         if raw_bytes.len() as u32 != uncompressed_len {
-            return Err(StoreError::InvalidInput("uncompressed length mismatch".into()));
+            return Err(StoreError::InvalidInput(
+                "uncompressed length mismatch".into(),
+            ));
         }
 
         let mut hasher = Hasher::new();
@@ -239,7 +249,12 @@ impl Store {
         Ok((record, metadata))
     }
 
-    pub fn get_last(&mut self, context_id: u64, limit: u32, include_payload: bool) -> Result<Vec<TurnWithMeta>> {
+    pub fn get_last(
+        &mut self,
+        context_id: u64,
+        limit: u32,
+        include_payload: bool,
+    ) -> Result<Vec<TurnWithMeta>> {
         let turns = self.turn_store.get_last(context_id, limit)?;
         let mut out = Vec::with_capacity(turns.len());
         for record in turns {
@@ -249,7 +264,11 @@ impl Store {
             } else {
                 None
             };
-            out.push(TurnWithMeta { record, meta, payload });
+            out.push(TurnWithMeta {
+                record,
+                meta,
+                payload,
+            });
         }
         Ok(out)
     }
@@ -261,7 +280,9 @@ impl Store {
         limit: u32,
         include_payload: bool,
     ) -> Result<Vec<TurnWithMeta>> {
-        let turns = self.turn_store.get_before(context_id, before_turn_id, limit)?;
+        let turns = self
+            .turn_store
+            .get_before(context_id, before_turn_id, limit)?;
         let mut out = Vec::with_capacity(turns.len());
         for record in turns {
             let meta = self.turn_store.get_turn_meta(record.turn_id)?;
@@ -270,7 +291,11 @@ impl Store {
             } else {
                 None
             };
-            out.push(TurnWithMeta { record, meta, payload });
+            out.push(TurnWithMeta {
+                record,
+                meta,
+                payload,
+            });
         }
         Ok(out)
     }
@@ -387,14 +412,18 @@ impl Store {
 
     /// List entries at a path in the filesystem snapshot for a turn.
     pub fn list_fs_entries(&mut self, turn_id: u64, path: &str) -> Result<Vec<TreeEntry>> {
-        let fs_root = self.fs_roots
+        let fs_root = self
+            .fs_roots
             .get_inherited(turn_id, &self.turn_store)
             .ok_or_else(|| StoreError::NotFound("no fs snapshot for turn".into()))?;
 
-        let (tree_hash, is_dir) = crate::fs_store::resolve_path(&mut self.blob_store, &fs_root, path)?;
+        let (tree_hash, is_dir) =
+            crate::fs_store::resolve_path(&mut self.blob_store, &fs_root, path)?;
 
         if !is_dir {
-            return Err(StoreError::InvalidInput(format!("path is not a directory: {path}")));
+            return Err(StoreError::InvalidInput(format!(
+                "path is not a directory: {path}"
+            )));
         }
 
         crate::fs_store::load_tree_entries(&mut self.blob_store, &tree_hash)
@@ -402,7 +431,8 @@ impl Store {
 
     /// Get file content at a path in the filesystem snapshot for a turn.
     pub fn get_fs_file(&mut self, turn_id: u64, path: &str) -> Result<(Vec<u8>, TreeEntry)> {
-        let fs_root = self.fs_roots
+        let fs_root = self
+            .fs_roots
             .get_inherited(turn_id, &self.turn_store)
             .ok_or_else(|| StoreError::NotFound("no fs snapshot for turn".into()))?;
 
@@ -452,7 +482,11 @@ impl Store {
     }
 
     /// Recursively compute the size of all blobs in a tree.
-    fn compute_tree_size(&mut self, tree_hash: &[u8; 32], visited: &mut std::collections::HashSet<[u8; 32]>) -> u64 {
+    fn compute_tree_size(
+        &mut self,
+        tree_hash: &[u8; 32],
+        visited: &mut std::collections::HashSet<[u8; 32]>,
+    ) -> u64 {
         // Skip if already visited (deduplication)
         if !visited.insert(*tree_hash) {
             return 0;
@@ -527,7 +561,11 @@ fn extract_context_metadata(payload: &[u8]) -> Option<ContextMetadata> {
             Value::Integer(i) => i.as_u64()?,
             _ => return None,
         };
-        if key == 30 { Some(v) } else { None }
+        if key == 30 {
+            Some(v)
+        } else {
+            None
+        }
     })?;
 
     let metadata_map = match context_metadata_value {
@@ -585,7 +623,11 @@ fn extract_context_metadata(payload: &[u8]) -> Option<ContextMetadata> {
     }
 
     // Only return if we found at least one piece of metadata
-    if metadata.client_tag.is_some() || metadata.title.is_some() || metadata.labels.is_some() || metadata.provenance.is_some() {
+    if metadata.client_tag.is_some()
+        || metadata.title.is_some()
+        || metadata.labels.is_some()
+        || metadata.provenance.is_some()
+    {
         Some(metadata)
     } else {
         None

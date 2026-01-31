@@ -21,12 +21,17 @@ pub mod types;
 
 #[cfg(test)]
 mod test_util;
-pub use crate::client::{dial, dial_tls, Client, ClientOption, RequestContext, with_client_tag, with_dial_timeout, with_request_timeout};
+pub use crate::client::{
+    dial, dial_tls, with_client_tag, with_dial_timeout, with_request_timeout, Client, ClientOption,
+    RequestContext,
+};
 pub use crate::context::ContextHead;
 pub use crate::encoding::{decode_msgpack, decode_msgpack_into, encode_msgpack};
 pub use crate::error::{is_server_error, Error, Result, ServerError};
 pub use crate::fs::{AttachFsRequest, AttachFsResult, PutBlobRequest, PutBlobResult};
-pub use crate::reconnect::{dial_reconnecting, dial_tls_reconnecting, DialFunc, ReconnectOption, ReconnectingClient};
+pub use crate::reconnect::{
+    dial_reconnecting, dial_tls_reconnecting, DialFunc, ReconnectOption, ReconnectingClient,
+};
 pub use crate::turn::{AppendRequest, AppendResult, GetLastOptions, TurnRecord};
 
 // Re-export shared constants for parity with Go names.
@@ -50,7 +55,6 @@ pub const DefaultRetryDelay: std::time::Duration = reconnect::DEFAULT_RETRY_DELA
 pub const DefaultMaxRetryDelay: std::time::Duration = reconnect::DEFAULT_MAX_RETRY_DELAY;
 #[allow(non_upper_case_globals)]
 pub const DefaultQueueSize: usize = reconnect::DEFAULT_QUEUE_SIZE;
-
 
 /// Go-parity alias for client options.
 pub type Option = ClientOption;

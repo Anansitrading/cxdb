@@ -206,7 +206,11 @@ impl ReconnectingClient {
         self.inner.queue_rx.len()
     }
 
-    pub fn create_context(&self, ctx: &RequestContext, base_turn_id: u64) -> Result<crate::context::ContextHead> {
+    pub fn create_context(
+        &self,
+        ctx: &RequestContext,
+        base_turn_id: u64,
+    ) -> Result<crate::context::ContextHead> {
         let result = Arc::new(Mutex::new(None));
         let ctx_clone = ctx.clone();
         let result_clone = result.clone();
@@ -219,7 +223,11 @@ impl ReconnectingClient {
         Ok(value)
     }
 
-    pub fn fork_context(&self, ctx: &RequestContext, base_turn_id: u64) -> Result<crate::context::ContextHead> {
+    pub fn fork_context(
+        &self,
+        ctx: &RequestContext,
+        base_turn_id: u64,
+    ) -> Result<crate::context::ContextHead> {
         let result = Arc::new(Mutex::new(None));
         let ctx_clone = ctx.clone();
         let result_clone = result.clone();
@@ -232,7 +240,11 @@ impl ReconnectingClient {
         Ok(value)
     }
 
-    pub fn get_head(&self, ctx: &RequestContext, context_id: u64) -> Result<crate::context::ContextHead> {
+    pub fn get_head(
+        &self,
+        ctx: &RequestContext,
+        context_id: u64,
+    ) -> Result<crate::context::ContextHead> {
         let result = Arc::new(Mutex::new(None));
         let ctx_clone = ctx.clone();
         let result_clone = result.clone();
@@ -245,7 +257,11 @@ impl ReconnectingClient {
         Ok(value)
     }
 
-    pub fn append_turn(&self, ctx: &RequestContext, req: &crate::turn::AppendRequest) -> Result<crate::turn::AppendResult> {
+    pub fn append_turn(
+        &self,
+        ctx: &RequestContext,
+        req: &crate::turn::AppendRequest,
+    ) -> Result<crate::turn::AppendResult> {
         let result = Arc::new(Mutex::new(None));
         let req = req.clone();
         let ctx_clone = ctx.clone();
@@ -277,7 +293,11 @@ impl ReconnectingClient {
         Ok(value)
     }
 
-    pub fn attach_fs(&self, ctx: &RequestContext, req: &crate::fs::AttachFsRequest) -> Result<crate::fs::AttachFsResult> {
+    pub fn attach_fs(
+        &self,
+        ctx: &RequestContext,
+        req: &crate::fs::AttachFsRequest,
+    ) -> Result<crate::fs::AttachFsResult> {
         let result = Arc::new(Mutex::new(None));
         let req = req.clone();
         let ctx_clone = ctx.clone();
@@ -291,7 +311,11 @@ impl ReconnectingClient {
         Ok(value)
     }
 
-    pub fn put_blob(&self, ctx: &RequestContext, req: &crate::fs::PutBlobRequest) -> Result<crate::fs::PutBlobResult> {
+    pub fn put_blob(
+        &self,
+        ctx: &RequestContext,
+        req: &crate::fs::PutBlobRequest,
+    ) -> Result<crate::fs::PutBlobResult> {
         let result = Arc::new(Mutex::new(None));
         let req = req.clone();
         let ctx_clone = ctx.clone();
@@ -305,7 +329,11 @@ impl ReconnectingClient {
         Ok(value)
     }
 
-    pub fn put_blob_if_absent(&self, ctx: &RequestContext, data: Vec<u8>) -> Result<([u8; 32], bool)> {
+    pub fn put_blob_if_absent(
+        &self,
+        ctx: &RequestContext,
+        data: Vec<u8>,
+    ) -> Result<([u8; 32], bool)> {
         let result = Arc::new(Mutex::new(None));
         let ctx_clone = ctx.clone();
         let data = Arc::new(data);
@@ -419,11 +447,7 @@ fn process_request(inner: &Arc<Inner>, req: QueuedRequest) {
             if let Err(reconn_err) = reconnect(inner, &req.ctx) {
                 err = Err(reconn_err);
             } else {
-                let client = inner
-                    .client
-                    .lock()
-                    .ok()
-                    .and_then(|c| c.as_ref().cloned());
+                let client = inner.client.lock().ok().and_then(|c| c.as_ref().cloned());
                 if let Some(client) = client {
                     err = (op)(&client);
                 }
@@ -524,7 +548,9 @@ fn wait_for_result(result_rx: &Receiver<Result<()>>, ctx: &RequestContext) -> Re
         let recv_result = if let Some(timeout) = timeout {
             result_rx.recv_timeout(timeout)
         } else {
-            result_rx.recv().map_err(|_| crossbeam_channel::RecvTimeoutError::Disconnected)
+            result_rx
+                .recv()
+                .map_err(|_| crossbeam_channel::RecvTimeoutError::Disconnected)
         };
 
         match recv_result {
@@ -596,7 +622,10 @@ mod tests {
     use crate::protocol::{read_frame, write_frame, MSG_HELLO};
     use byteorder::{LittleEndian, WriteBytesExt};
     use std::net::TcpListener;
-    use std::sync::{atomic::{AtomicUsize, Ordering as AtomicOrdering}, mpsc, Arc, Barrier};
+    use std::sync::{
+        atomic::{AtomicUsize, Ordering as AtomicOrdering},
+        mpsc, Arc, Barrier,
+    };
     use std::thread;
     use std::time::Duration;
 
@@ -620,11 +649,27 @@ mod tests {
     #[test]
     fn is_connection_error_matches_basic_cases() {
         assert!(!is_connection_error(&Error::ClientClosed));
-        assert!(!is_connection_error(&Error::Server(crate::error::ServerError { code: 404, detail: "not found".into() })));
-        assert!(is_connection_error(&Error::Io(std::io::Error::new(std::io::ErrorKind::ConnectionReset, "reset"))));
-        assert!(is_connection_error(&Error::Io(std::io::Error::new(std::io::ErrorKind::TimedOut, "timeout"))));
-        assert!(is_connection_error(&Error::Tls("connection refused".into())));
-        assert!(is_connection_error(&Error::Io(std::io::Error::new(std::io::ErrorKind::Other, "use of closed network connection"))));
+        assert!(!is_connection_error(&Error::Server(
+            crate::error::ServerError {
+                code: 404,
+                detail: "not found".into()
+            }
+        )));
+        assert!(is_connection_error(&Error::Io(std::io::Error::new(
+            std::io::ErrorKind::ConnectionReset,
+            "reset"
+        ))));
+        assert!(is_connection_error(&Error::Io(std::io::Error::new(
+            std::io::ErrorKind::TimedOut,
+            "timeout"
+        ))));
+        assert!(is_connection_error(&Error::Tls(
+            "connection refused".into()
+        )));
+        assert!(is_connection_error(&Error::Io(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "use of closed network connection"
+        ))));
     }
 
     #[test]
@@ -635,13 +680,15 @@ mod tests {
             move || dial(&addr, Vec::<ClientOption>::new())
         });
 
-        let client = Arc::new(dial_reconnecting_inner(
-            &addr,
-            false,
-            vec![with_queue_size(1), with_dial_func(dial_func)],
-            Vec::<ClientOption>::new(),
-        )
-        .unwrap());
+        let client = Arc::new(
+            dial_reconnecting_inner(
+                &addr,
+                false,
+                vec![with_queue_size(1), with_dial_func(dial_func)],
+                Vec::<ClientOption>::new(),
+            )
+            .unwrap(),
+        );
 
         let start_barrier = Arc::new(Barrier::new(2));
         let release_barrier = Arc::new(Barrier::new(2));
@@ -670,7 +717,9 @@ mod tests {
         client.inner.queue_tx.try_send(queued_req).unwrap();
 
         // Third enqueue should fail because queue size is 1 and queued_req is waiting.
-        let err = client.enqueue(&RequestContext::background(), "overflow", |_| Ok(())).unwrap_err();
+        let err = client
+            .enqueue(&RequestContext::background(), "overflow", |_| Ok(()))
+            .unwrap_err();
         assert!(matches!(err, Error::QueueFull));
 
         release_barrier.wait();
@@ -688,13 +737,15 @@ mod tests {
             let addr = addr.clone();
             move || dial(&addr, Vec::<ClientOption>::new())
         });
-        let client = Arc::new(dial_reconnecting_inner(
-            &addr,
-            false,
-            vec![with_dial_func(dial_func)],
-            Vec::<ClientOption>::new(),
-        )
-        .unwrap());
+        let client = Arc::new(
+            dial_reconnecting_inner(
+                &addr,
+                false,
+                vec![with_dial_func(dial_func)],
+                Vec::<ClientOption>::new(),
+            )
+            .unwrap(),
+        );
 
         let started = Arc::new(Barrier::new(2));
         let release = Arc::new(Barrier::new(2));
@@ -739,13 +790,15 @@ mod tests {
             let addr = addr.clone();
             move || dial(&addr, Vec::<ClientOption>::new())
         });
-        let client = Arc::new(dial_reconnecting_inner(
-            &addr,
-            false,
-            vec![with_dial_func(dial_func)],
-            Vec::<ClientOption>::new(),
-        )
-        .unwrap());
+        let client = Arc::new(
+            dial_reconnecting_inner(
+                &addr,
+                false,
+                vec![with_dial_func(dial_func)],
+                Vec::<ClientOption>::new(),
+            )
+            .unwrap(),
+        );
 
         let success_count = Arc::new(AtomicUsize::new(0));
         let mut handles = Vec::new();
@@ -776,15 +829,19 @@ mod tests {
             let addr = addr.clone();
             move || dial(&addr, Vec::<ClientOption>::new())
         });
-        let client = Arc::new(dial_reconnecting_inner(
-            &addr,
-            false,
-            vec![with_dial_func(dial_func)],
-            Vec::<ClientOption>::new(),
-        )
-        .unwrap());
+        let client = Arc::new(
+            dial_reconnecting_inner(
+                &addr,
+                false,
+                vec![with_dial_func(dial_func)],
+                Vec::<ClientOption>::new(),
+            )
+            .unwrap(),
+        );
         client.close().unwrap();
-        let err = client.enqueue(&RequestContext::background(), "closed", |_| Ok(())).unwrap_err();
+        let err = client
+            .enqueue(&RequestContext::background(), "closed", |_| Ok(()))
+            .unwrap_err();
         assert!(matches!(err, Error::ClientClosed));
         let _ = stop_tx.send(());
         handle.join().unwrap();
@@ -802,22 +859,27 @@ mod tests {
                 if attempt == 0 {
                     dial(&addr, Vec::<ClientOption>::new())
                 } else {
-                    Err(Error::Io(std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused")))
+                    Err(Error::Io(std::io::Error::new(
+                        std::io::ErrorKind::ConnectionRefused,
+                        "refused",
+                    )))
                 }
             }
         });
 
-        let client = Arc::new(dial_reconnecting_inner(
-            &addr,
-            false,
-            vec![
-                with_dial_func(dial_func),
-                with_max_retries(3),
-                with_retry_delay(Duration::from_millis(50)),
-            ],
-            Vec::<ClientOption>::new(),
-        )
-        .unwrap());
+        let client = Arc::new(
+            dial_reconnecting_inner(
+                &addr,
+                false,
+                vec![
+                    with_dial_func(dial_func),
+                    with_max_retries(3),
+                    with_retry_delay(Duration::from_millis(50)),
+                ],
+                Vec::<ClientOption>::new(),
+            )
+            .unwrap(),
+        );
 
         let (ctx, handle_cancel) = RequestContext::cancellable();
         let cancel_thread = thread::spawn(move || {
@@ -826,7 +888,12 @@ mod tests {
         });
 
         let err = client
-            .enqueue(&ctx, "force-reconnect", |_| Err(Error::Io(std::io::Error::new(std::io::ErrorKind::ConnectionReset, "reset"))))
+            .enqueue(&ctx, "force-reconnect", |_| {
+                Err(Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::ConnectionReset,
+                    "reset",
+                )))
+            })
             .unwrap_err();
         assert!(matches!(err, Error::Cancelled));
 

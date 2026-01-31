@@ -13,7 +13,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let payload = encode_msgpack(&new_user_input("Hello from Rust", Vec::new()))?;
     let append = client.append_turn(
         &ctx,
-        &AppendRequest::new(head.context_id, TypeIDConversationItem, TypeVersionConversationItem, payload),
+        &AppendRequest::new(
+            head.context_id,
+            TypeIDConversationItem,
+            TypeVersionConversationItem,
+            payload,
+        ),
     )?;
 
     let turns = client.get_last(&ctx, head.context_id, GetLastOptions::default())?;

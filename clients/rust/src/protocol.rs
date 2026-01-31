@@ -42,7 +42,13 @@ pub struct Frame {
     pub payload: Vec<u8>,
 }
 
-pub fn write_frame<W: Write>(writer: &mut W, msg_type: u16, flags: u16, req_id: u64, payload: &[u8]) -> Result<()> {
+pub fn write_frame<W: Write>(
+    writer: &mut W,
+    msg_type: u16,
+    flags: u16,
+    req_id: u64,
+    payload: &[u8],
+) -> Result<()> {
     writer.write_u32::<LittleEndian>(payload.len() as u32)?;
     writer.write_u16::<LittleEndian>(msg_type)?;
     writer.write_u16::<LittleEndian>(flags)?;
@@ -69,9 +75,15 @@ pub fn read_frame<R: Read>(reader: &mut R) -> Result<Frame> {
         )));
     }
 
-    let msg_type = reader.read_u16::<LittleEndian>().map_err(map_header_error)?;
-    let flags = reader.read_u16::<LittleEndian>().map_err(map_header_error)?;
-    let req_id = reader.read_u64::<LittleEndian>().map_err(map_header_error)?;
+    let msg_type = reader
+        .read_u16::<LittleEndian>()
+        .map_err(map_header_error)?;
+    let flags = reader
+        .read_u16::<LittleEndian>()
+        .map_err(map_header_error)?;
+    let req_id = reader
+        .read_u64::<LittleEndian>()
+        .map_err(map_header_error)?;
 
     let mut payload = vec![0u8; len as usize];
     if let Err(err) = reader.read_exact(&mut payload) {

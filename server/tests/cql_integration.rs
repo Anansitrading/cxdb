@@ -5,7 +5,7 @@
 //!
 //! End-to-end tests covering the CQL parser, indexes, and executor.
 
-use cxdb_server::cql::{parse, execute, Expression, Operator, Value, SecondaryIndexes};
+use cxdb_server::cql::{execute, parse, Expression, Operator, SecondaryIndexes, Value};
 use cxdb_server::store::{ContextMetadata, Provenance};
 use std::collections::HashSet;
 
@@ -91,7 +91,11 @@ fn test_parse_simple_equality() {
     assert_eq!(query.raw, r#"tag = "amplifier""#);
 
     match &query.ast {
-        Expression::Comparison { field, operator, value } => {
+        Expression::Comparison {
+            field,
+            operator,
+            value,
+        } => {
             assert_eq!(field, "tag");
             assert!(matches!(operator, Operator::Eq));
             match value {
@@ -143,9 +147,8 @@ fn test_parse_not_expression() {
 
 #[test]
 fn test_parse_parentheses() {
-    let query =
-        parse(r#"(service = "dotrunner" OR service = "gen") AND tag = "amplifier""#)
-            .expect("should parse");
+    let query = parse(r#"(service = "dotrunner" OR service = "gen") AND tag = "amplifier""#)
+        .expect("should parse");
 
     match &query.ast {
         Expression::And { left, right } => {
@@ -185,7 +188,9 @@ fn test_parse_in_operator() {
     let query = parse(r#"tag IN ("a", "b", "c")"#).expect("should parse");
 
     match &query.ast {
-        Expression::Comparison { operator, value, .. } => {
+        Expression::Comparison {
+            operator, value, ..
+        } => {
             assert!(matches!(operator, Operator::In));
             match value {
                 Value::List { values } => assert_eq!(values.len(), 3),
@@ -201,12 +206,10 @@ fn test_parse_numeric_value() {
     let query = parse("id = 12345").expect("should parse");
 
     match &query.ast {
-        Expression::Comparison { value, .. } => {
-            match value {
-                Value::Number { value: n } => assert_eq!(*n as i64, 12345),
-                _ => panic!("expected Number value"),
-            }
-        }
+        Expression::Comparison { value, .. } => match value {
+            Value::Number { value: n } => assert_eq!(*n as i64, 12345),
+            _ => panic!("expected Number value"),
+        },
         _ => panic!("expected Comparison"),
     }
 }
@@ -339,10 +342,7 @@ fn test_execute_complex_query() {
     let indexes = create_test_indexes();
     let live_contexts = HashSet::new();
 
-    let query = parse(
-        r#"(tag = "amplifier" OR tag = "core") AND user = "jay""#,
-    )
-    .unwrap();
+    let query = parse(r#"(tag = "amplifier" OR tag = "core") AND user = "jay""#).unwrap();
     let result = execute(&query.ast, &indexes, &live_contexts).unwrap();
 
     // Only context 1 matches: tag=amplifier AND user=jay

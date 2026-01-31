@@ -12,8 +12,8 @@ use rustls::{ClientConfig, ClientConnection};
 
 use crate::error::{Error, Result};
 use crate::protocol::{
-    read_frame, write_frame, Frame, MSG_ERROR, MSG_HELLO, DEFAULT_DIAL_TIMEOUT,
-    DEFAULT_REQUEST_TIMEOUT,
+    read_frame, write_frame, Frame, DEFAULT_DIAL_TIMEOUT, DEFAULT_REQUEST_TIMEOUT, MSG_ERROR,
+    MSG_HELLO,
 };
 
 pub type ClientOption = Arc<dyn Fn(&mut ClientOptions) + Send + Sync>;
@@ -143,7 +143,12 @@ impl Client {
         &self.client_tag
     }
 
-    pub(crate) fn send_request(&self, ctx: &RequestContext, msg_type: u16, payload: &[u8]) -> Result<Frame> {
+    pub(crate) fn send_request(
+        &self,
+        ctx: &RequestContext,
+        msg_type: u16,
+        payload: &[u8],
+    ) -> Result<Frame> {
         self.send_request_with_flags(ctx, msg_type, 0, payload)
     }
 
@@ -263,8 +268,8 @@ pub fn dial_tls(addr: &str, opts: impl IntoIterator<Item = ClientOption>) -> Res
     };
 
     let server_name = server_name_from_addr(addr)?;
-    let conn = ClientConnection::new(config, server_name)
-        .map_err(|err| Error::Tls(err.to_string()))?;
+    let conn =
+        ClientConnection::new(config, server_name).map_err(|err| Error::Tls(err.to_string()))?;
 
     let stream = rustls::StreamOwned::new(conn, stream);
 
@@ -302,16 +307,21 @@ fn connect_tcp(addr: &str, timeout: Duration) -> Result<TcpStream> {
         }
     }
 
-    Err(last_err.map(Error::Io).unwrap_or(Error::Io(
-        std::io::Error::new(std::io::ErrorKind::Other, "no addresses resolved"),
-    )))
+    Err(last_err
+        .map(Error::Io)
+        .unwrap_or(Error::Io(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "no addresses resolved",
+        ))))
 }
 
 fn default_tls_config() -> Result<ClientConfig> {
     let mut root_store = rustls::RootCertStore::empty();
     let certs = rustls_native_certs::load_native_certs();
     for cert in certs.certs {
-        root_store.add(cert).map_err(|err| Error::Tls(err.to_string()))?;
+        root_store
+            .add(cert)
+            .map_err(|err| Error::Tls(err.to_string()))?;
     }
     let config = ClientConfig::builder()
         .with_root_certificates(root_store)
@@ -322,11 +332,12 @@ fn default_tls_config() -> Result<ClientConfig> {
 fn server_name_from_addr(addr: &str) -> Result<ServerName<'static>> {
     let host = if addr.starts_with('[') {
         // IPv6 in brackets
-        addr.split(']').next().unwrap_or("[]").trim_start_matches('[')
+        addr.split(']')
+            .next()
+            .unwrap_or("[]")
+            .trim_start_matches('[')
     } else {
-        addr.rsplit_once(':')
-            .map(|(host, _)| host)
-            .unwrap_or(addr)
+        addr.rsplit_once(':').map(|(host, _)| host).unwrap_or(addr)
     };
 
     ServerName::try_from(host.to_string())
@@ -371,8 +382,13 @@ impl Connection {
 
     fn close(&mut self) -> Result<()> {
         match self {
-            Connection::Plain(stream) => stream.shutdown(std::net::Shutdown::Both).map_err(Error::Io),
-            Connection::Tls(stream) => stream.get_mut().shutdown(std::net::Shutdown::Both).map_err(Error::Io),
+            Connection::Plain(stream) => {
+                stream.shutdown(std::net::Shutdown::Both).map_err(Error::Io)
+            }
+            Connection::Tls(stream) => stream
+                .get_mut()
+                .shutdown(std::net::Shutdown::Both)
+                .map_err(Error::Io),
         }
     }
 }
@@ -409,7 +425,7 @@ mod tests {
     use crate::test_util::{decode_hex, load_fixture};
     use rcgen::{CertificateParams, DistinguishedName, DnType, KeyPair};
     use rustls::ServerConfig;
-    use std::net::{TcpListener};
+    use std::net::TcpListener;
     use std::thread;
 
     #[test]
@@ -440,7 +456,10 @@ mod tests {
         let fixture = load_fixture("hello_tag");
         assert_eq!(fixture.msg_type, MSG_HELLO);
         assert_eq!(fixture.flags, 0);
-        assert_eq!(decode_hex(&fixture.payload_hex), hello_payload("test-client"));
+        assert_eq!(
+            decode_hex(&fixture.payload_hex),
+            hello_payload("test-client")
+        );
     }
 
     #[test]
@@ -473,7 +492,8 @@ mod tests {
     #[test]
     fn oversized_frame_is_rejected() {
         let mut buf = Vec::new();
-        buf.write_u32::<LittleEndian>(crate::protocol::MAX_FRAME_SIZE + 1).unwrap();
+        buf.write_u32::<LittleEndian>(crate::protocol::MAX_FRAME_SIZE + 1)
+            .unwrap();
         buf.write_u16::<LittleEndian>(MSG_HELLO).unwrap();
         buf.write_u16::<LittleEndian>(0).unwrap();
         buf.write_u64::<LittleEndian>(1).unwrap();
@@ -530,11 +550,7 @@ mod tests {
         let client_config = Arc::new(client_config);
 
         let addr_str = format!("localhost:{}", addr.port());
-        let client = dial_tls(
-            &addr_str,
-            vec![with_tls_config(client_config)],
-        )
-        .unwrap();
+        let client = dial_tls(&addr_str, vec![with_tls_config(client_config)]).unwrap();
         assert_eq!(client.session_id(), 123);
 
         server_handle.join().unwrap();
@@ -566,15 +582,26 @@ mod tests {
             let mut err_payload = Vec::new();
             err_payload.write_u32::<LittleEndian>(404).unwrap();
             let detail = b"not found";
-            err_payload.write_u32::<LittleEndian>(detail.len() as u32).unwrap();
+            err_payload
+                .write_u32::<LittleEndian>(detail.len() as u32)
+                .unwrap();
             err_payload.extend_from_slice(detail);
-            write_frame(&mut stream, crate::protocol::MSG_ERROR, 0, req.header.req_id, &err_payload).unwrap();
+            write_frame(
+                &mut stream,
+                crate::protocol::MSG_ERROR,
+                0,
+                req.header.req_id,
+                &err_payload,
+            )
+            .unwrap();
         });
 
         let client = dial(&addr.to_string(), Vec::new()).unwrap();
         let ctx = RequestContext::background();
         let payload = 0u64.to_le_bytes();
-        let err = client.send_request(&ctx, crate::protocol::MSG_CTX_CREATE, &payload).unwrap_err();
+        let err = client
+            .send_request(&ctx, crate::protocol::MSG_CTX_CREATE, &payload)
+            .unwrap_err();
         match err {
             Error::Server(server) => {
                 assert_eq!(server.code, 404);
@@ -595,7 +622,10 @@ mod tests {
         payload
     }
 
-    fn generate_cert() -> (rustls::pki_types::CertificateDer<'static>, rustls::pki_types::PrivateKeyDer<'static>) {
+    fn generate_cert() -> (
+        rustls::pki_types::CertificateDer<'static>,
+        rustls::pki_types::PrivateKeyDer<'static>,
+    ) {
         let mut params = CertificateParams::new(vec!["localhost".to_string()]).unwrap();
         let mut dn = DistinguishedName::new();
         dn.push(DnType::CommonName, "cxdb-test");
@@ -606,9 +636,9 @@ mod tests {
         let key_der = key_pair.serialize_der();
         (
             rustls::pki_types::CertificateDer::from(cert_der),
-            rustls::pki_types::PrivateKeyDer::from(
-                rustls::pki_types::PrivatePkcs8KeyDer::from(key_der),
-            ),
+            rustls::pki_types::PrivateKeyDer::from(rustls::pki_types::PrivatePkcs8KeyDer::from(
+                key_der,
+            )),
         )
     }
 }

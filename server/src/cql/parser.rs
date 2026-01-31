@@ -12,7 +12,9 @@
 //!   primary     = comparison | "(" expression ")" ;
 //!   comparison  = field operator value ;
 
-use super::ast::{CqlError, CqlErrorType, CqlQuery, Expression, FieldName, Operator, Position, Value};
+use super::ast::{
+    CqlError, CqlErrorType, CqlQuery, Expression, FieldName, Operator, Position, Value,
+};
 
 /// Token types for the lexer.
 #[derive(Debug, Clone, PartialEq)]
@@ -112,7 +114,10 @@ impl<'a> Lexer<'a> {
                 None => {
                     return Err(CqlError {
                         error_type: CqlErrorType::SyntaxError,
-                        message: format!("Unterminated string starting at line {}, column {}", start_pos.line, start_pos.column),
+                        message: format!(
+                            "Unterminated string starting at line {}, column {}",
+                            start_pos.line, start_pos.column
+                        ),
                         position: Some(start_pos),
                         field: None,
                     });
@@ -234,37 +239,59 @@ impl<'a> Lexer<'a> {
                 let quote = self.peek().unwrap();
                 self.read_string(quote)
             }
-            Some(ch) if ch.is_ascii_digit() || (ch == '-' && self.input[self.pos..].len() > 1 && self.input[self.pos + 1..].starts_with(|c: char| c.is_ascii_digit())) => {
+            Some(ch)
+                if ch.is_ascii_digit()
+                    || (ch == '-'
+                        && self.input[self.pos..].len() > 1
+                        && self.input[self.pos + 1..]
+                            .starts_with(|c: char| c.is_ascii_digit())) =>
+            {
                 Ok(self.read_number())
             }
-            Some(ch) if ch.is_alphabetic() || ch == '_' => {
-                Ok(self.read_identifier())
-            }
+            Some(ch) if ch.is_alphabetic() || ch == '_' => Ok(self.read_identifier()),
             Some('(') => {
                 self.advance();
-                Ok(Token { token_type: TokenType::LParen, position: start_pos })
+                Ok(Token {
+                    token_type: TokenType::LParen,
+                    position: start_pos,
+                })
             }
             Some(')') => {
                 self.advance();
-                Ok(Token { token_type: TokenType::RParen, position: start_pos })
+                Ok(Token {
+                    token_type: TokenType::RParen,
+                    position: start_pos,
+                })
             }
             Some(',') => {
                 self.advance();
-                Ok(Token { token_type: TokenType::Comma, position: start_pos })
+                Ok(Token {
+                    token_type: TokenType::Comma,
+                    position: start_pos,
+                })
             }
             Some('=') => {
                 self.advance();
-                Ok(Token { token_type: TokenType::Eq, position: start_pos })
+                Ok(Token {
+                    token_type: TokenType::Eq,
+                    position: start_pos,
+                })
             }
             Some('!') => {
                 self.advance();
                 if self.peek() == Some('=') {
                     self.advance();
-                    Ok(Token { token_type: TokenType::Neq, position: start_pos })
+                    Ok(Token {
+                        token_type: TokenType::Neq,
+                        position: start_pos,
+                    })
                 } else {
                     Err(CqlError {
                         error_type: CqlErrorType::SyntaxError,
-                        message: format!("Expected '=' after '!' at line {}, column {}", start_pos.line, start_pos.column),
+                        message: format!(
+                            "Expected '=' after '!' at line {}, column {}",
+                            start_pos.line, start_pos.column
+                        ),
                         position: Some(start_pos),
                         field: None,
                     })
@@ -276,22 +303,34 @@ impl<'a> Lexer<'a> {
                     self.advance();
                     if self.peek() == Some('=') {
                         self.advance();
-                        Ok(Token { token_type: TokenType::StartsCi, position: start_pos })
+                        Ok(Token {
+                            token_type: TokenType::StartsCi,
+                            position: start_pos,
+                        })
                     } else {
                         Err(CqlError {
                             error_type: CqlErrorType::SyntaxError,
-                            message: format!("Expected '=' after '^~' at line {}, column {}", start_pos.line, start_pos.column),
+                            message: format!(
+                                "Expected '=' after '^~' at line {}, column {}",
+                                start_pos.line, start_pos.column
+                            ),
                             position: Some(start_pos),
                             field: None,
                         })
                     }
                 } else if self.peek() == Some('=') {
                     self.advance();
-                    Ok(Token { token_type: TokenType::Starts, position: start_pos })
+                    Ok(Token {
+                        token_type: TokenType::Starts,
+                        position: start_pos,
+                    })
                 } else {
                     Err(CqlError {
                         error_type: CqlErrorType::SyntaxError,
-                        message: format!("Expected '=' or '~=' after '^' at line {}, column {}", start_pos.line, start_pos.column),
+                        message: format!(
+                            "Expected '=' or '~=' after '^' at line {}, column {}",
+                            start_pos.line, start_pos.column
+                        ),
                         position: Some(start_pos),
                         field: None,
                     })
@@ -301,11 +340,17 @@ impl<'a> Lexer<'a> {
                 self.advance();
                 if self.peek() == Some('=') {
                     self.advance();
-                    Ok(Token { token_type: TokenType::EqCi, position: start_pos })
+                    Ok(Token {
+                        token_type: TokenType::EqCi,
+                        position: start_pos,
+                    })
                 } else {
                     Err(CqlError {
                         error_type: CqlErrorType::SyntaxError,
-                        message: format!("Expected '=' after '~' at line {}, column {}", start_pos.line, start_pos.column),
+                        message: format!(
+                            "Expected '=' after '~' at line {}, column {}",
+                            start_pos.line, start_pos.column
+                        ),
                         position: Some(start_pos),
                         field: None,
                     })
@@ -315,28 +360,41 @@ impl<'a> Lexer<'a> {
                 self.advance();
                 if self.peek() == Some('=') {
                     self.advance();
-                    Ok(Token { token_type: TokenType::Gte, position: start_pos })
+                    Ok(Token {
+                        token_type: TokenType::Gte,
+                        position: start_pos,
+                    })
                 } else {
-                    Ok(Token { token_type: TokenType::Gt, position: start_pos })
+                    Ok(Token {
+                        token_type: TokenType::Gt,
+                        position: start_pos,
+                    })
                 }
             }
             Some('<') => {
                 self.advance();
                 if self.peek() == Some('=') {
                     self.advance();
-                    Ok(Token { token_type: TokenType::Lte, position: start_pos })
+                    Ok(Token {
+                        token_type: TokenType::Lte,
+                        position: start_pos,
+                    })
                 } else {
-                    Ok(Token { token_type: TokenType::Lt, position: start_pos })
+                    Ok(Token {
+                        token_type: TokenType::Lt,
+                        position: start_pos,
+                    })
                 }
             }
-            Some(ch) => {
-                Err(CqlError {
-                    error_type: CqlErrorType::SyntaxError,
-                    message: format!("Unexpected character '{}' at line {}, column {}", ch, start_pos.line, start_pos.column),
-                    position: Some(start_pos),
-                    field: None,
-                })
-            }
+            Some(ch) => Err(CqlError {
+                error_type: CqlErrorType::SyntaxError,
+                message: format!(
+                    "Unexpected character '{}' at line {}, column {}",
+                    ch, start_pos.line, start_pos.column
+                ),
+                position: Some(start_pos),
+                field: None,
+            }),
         }
     }
 
@@ -371,7 +429,11 @@ impl Parser {
     fn current(&self) -> &Token {
         self.tokens.get(self.pos).unwrap_or(&Token {
             token_type: TokenType::Eof,
-            position: Position { line: 1, column: 1, offset: 0 },
+            position: Position {
+                line: 1,
+                column: 1,
+                offset: 0,
+            },
         })
     }
 
@@ -504,7 +566,11 @@ impl Parser {
             let valid_fields: Vec<_> = FieldName::all().iter().map(|f| f.as_str()).collect();
             return Err(CqlError {
                 error_type: CqlErrorType::UnknownField,
-                message: format!("Unknown field '{}'. Valid fields: {}", field_name, valid_fields.join(", ")),
+                message: format!(
+                    "Unknown field '{}'. Valid fields: {}",
+                    field_name,
+                    valid_fields.join(", ")
+                ),
                 position: Some(field_token.position),
                 field: Some(field_name),
             });
@@ -570,16 +636,16 @@ impl Parser {
             }
             TokenType::Ident(s) if s.to_lowercase() == "true" || s.to_lowercase() == "false" => {
                 self.advance();
-                Ok(Value::String { value: s.to_lowercase() })
-            }
-            _ => {
-                Err(CqlError {
-                    error_type: CqlErrorType::SyntaxError,
-                    message: "Expected value".into(),
-                    position: Some(token.position),
-                    field: None,
+                Ok(Value::String {
+                    value: s.to_lowercase(),
                 })
             }
+            _ => Err(CqlError {
+                error_type: CqlErrorType::SyntaxError,
+                message: "Expected value".into(),
+                position: Some(token.position),
+                field: None,
+            }),
         }
     }
 
@@ -631,7 +697,9 @@ mod tests {
         let result = parse(r#"tag = "amplifier""#).unwrap();
         assert_eq!(result.raw, r#"tag = "amplifier""#);
         match result.ast {
-            Expression::Comparison { field, operator, .. } => {
+            Expression::Comparison {
+                field, operator, ..
+            } => {
                 assert_eq!(field, "tag");
                 assert_eq!(operator, Operator::Eq);
             }
@@ -670,7 +738,9 @@ mod tests {
     fn test_in_operator() {
         let result = parse(r#"tag IN ("a", "b", "c")"#).unwrap();
         match result.ast {
-            Expression::Comparison { operator, value, .. } => {
+            Expression::Comparison {
+                operator, value, ..
+            } => {
                 assert_eq!(operator, Operator::In);
                 match value {
                     Value::List { values } => assert_eq!(values.len(), 3),
@@ -685,12 +755,10 @@ mod tests {
     fn test_parentheses() {
         let result = parse(r#"(tag = "a" OR tag = "b") AND user = "jay""#).unwrap();
         match result.ast {
-            Expression::And { left, .. } => {
-                match *left {
-                    Expression::Or { .. } => {}
-                    _ => panic!("Expected OR in left side"),
-                }
-            }
+            Expression::And { left, .. } => match *left {
+                Expression::Or { .. } => {}
+                _ => panic!("Expected OR in left side"),
+            },
             _ => panic!("Expected AND expression"),
         }
     }
@@ -707,12 +775,10 @@ mod tests {
     fn test_relative_date() {
         let result = parse(r#"created > "-24h""#).unwrap();
         match result.ast {
-            Expression::Comparison { value, .. } => {
-                match value {
-                    Value::Date { relative, .. } => assert!(relative),
-                    _ => panic!("Expected date value"),
-                }
-            }
+            Expression::Comparison { value, .. } => match value {
+                Value::Date { relative, .. } => assert!(relative),
+                _ => panic!("Expected date value"),
+            },
             _ => panic!("Expected comparison"),
         }
     }

@@ -11,7 +11,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "write" => write_flow(&mut args)?,
         "read" => read_flow(&mut args)?,
         _ => {
-            eprintln!("usage: interop write <addr> <role> <text> | interop read <addr> <context_id>");
+            eprintln!(
+                "usage: interop write <addr> <role> <text> | interop read <addr> <context_id>"
+            );
         }
     }
     Ok(())

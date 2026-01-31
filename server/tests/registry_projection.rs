@@ -1,9 +1,9 @@
 // Copyright 2025 StrongDM Inc
 // SPDX-License-Identifier: Apache-2.0
 
+use cxdb_server::projection::project_msgpack;
 use cxdb_server::projection::{BytesRender, EnumRender, RenderOptions, TimeRender, U64Format};
 use cxdb_server::registry::Registry;
-use cxdb_server::projection::project_msgpack;
 use rmpv::Value;
 use tempfile::tempdir;
 
@@ -126,8 +126,12 @@ fn nested_type_references() {
     }
     "#;
 
-    registry.put_bundle("nested-test", bundle.as_bytes()).expect("put bundle");
-    let desc = registry.get_type_version("test:Item", 1).expect("descriptor");
+    registry
+        .put_bundle("nested-test", bundle.as_bytes())
+        .expect("put bundle");
+    let desc = registry
+        .get_type_version("test:Item", 1)
+        .expect("descriptor");
 
     // Build msgpack with nested structures using numeric tags
     // Item { item_type: "foo", nested: { name: "bar", value: 42 }, items: [{ id: "x", count: 1 }] }
@@ -142,7 +146,10 @@ fn nested_type_references() {
     let root_map = vec![
         (Value::Integer(1.into()), Value::String("foo".into())),
         (Value::Integer(2.into()), Value::Map(nested_map)),
-        (Value::Integer(3.into()), Value::Array(vec![Value::Map(array_item)])),
+        (
+            Value::Integer(3.into()),
+            Value::Array(vec![Value::Map(array_item)]),
+        ),
     ];
     let value = Value::Map(root_map);
 
@@ -156,7 +163,11 @@ fn nested_type_references() {
     assert_eq!(data.get("item_type").unwrap().as_str().unwrap(), "foo");
 
     // Check nested type was projected correctly (not raw numeric keys)
-    let nested = data.get("nested").unwrap().as_object().expect("nested object");
+    let nested = data
+        .get("nested")
+        .unwrap()
+        .as_object()
+        .expect("nested object");
     assert_eq!(nested.get("name").unwrap().as_str().unwrap(), "bar");
     assert_eq!(nested.get("value").unwrap().as_str().unwrap(), "42"); // u64 formatted as string
 
@@ -209,7 +220,10 @@ fn bundle_with_renderer_parses() {
 
     let renderer = spec.renderer.as_ref().expect("renderer should exist");
     assert_eq!(renderer.esm_url, "builtin:MessageRenderer");
-    assert_eq!(renderer.component.as_ref().unwrap(), "MessageRendererWrapper");
+    assert_eq!(
+        renderer.component.as_ref().unwrap(),
+        "MessageRendererWrapper"
+    );
     assert_eq!(renderer.integrity.as_ref().unwrap(), "sha384-abc123");
 }
 
@@ -247,7 +261,10 @@ fn bundle_without_renderer_backward_compat() {
         .get_type_version("test:OldType", 1)
         .expect("type version");
 
-    assert!(spec.renderer.is_none(), "renderer should be None for old bundles");
+    assert!(
+        spec.renderer.is_none(),
+        "renderer should be None for old bundles"
+    );
     assert!(spec.fields.contains_key(&1));
 }
 
@@ -301,7 +318,10 @@ fn get_all_renderers() {
 
     // TypeA has a renderer
     assert!(renderers.contains_key("test:TypeA"));
-    assert_eq!(renderers.get("test:TypeA").unwrap().esm_url, "builtin:RendererA");
+    assert_eq!(
+        renderers.get("test:TypeA").unwrap().esm_url,
+        "builtin:RendererA"
+    );
 
     // TypeB has no renderer
     assert!(!renderers.contains_key("test:TypeB"));

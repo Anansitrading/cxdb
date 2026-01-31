@@ -95,10 +95,24 @@ pub fn read_frame<R: Read>(reader: &mut R) -> Result<(FrameHeader, Vec<u8>)> {
 
     let mut payload = vec![0u8; len as usize];
     reader.read_exact(&mut payload)?;
-    Ok((FrameHeader { len, msg_type, flags, req_id }, payload))
+    Ok((
+        FrameHeader {
+            len,
+            msg_type,
+            flags,
+            req_id,
+        },
+        payload,
+    ))
 }
 
-pub fn write_frame<W: Write>(writer: &mut W, msg_type: u16, flags: u16, req_id: u64, payload: &[u8]) -> Result<()> {
+pub fn write_frame<W: Write>(
+    writer: &mut W,
+    msg_type: u16,
+    flags: u16,
+    req_id: u64,
+    payload: &[u8],
+) -> Result<()> {
     writer.write_u32::<LittleEndian>(payload.len() as u32)?;
     writer.write_u16::<LittleEndian>(msg_type)?;
     writer.write_u16::<LittleEndian>(flags)?;
@@ -193,13 +207,18 @@ pub fn parse_append_turn(payload: &[u8], flags: u16) -> Result<AppendTurnRequest
 /// Parse ATTACH_FS request: turn_id (u64) + fs_root_hash (32 bytes)
 pub fn parse_attach_fs(payload: &[u8]) -> Result<AttachFsRequest> {
     if payload.len() < 40 {
-        return Err(StoreError::InvalidInput("attach_fs payload too short".into()));
+        return Err(StoreError::InvalidInput(
+            "attach_fs payload too short".into(),
+        ));
     }
     let mut cursor = std::io::Cursor::new(payload);
     let turn_id = cursor.read_u64::<LittleEndian>()?;
     let mut fs_root_hash = [0u8; 32];
     cursor.read_exact(&mut fs_root_hash)?;
-    Ok(AttachFsRequest { turn_id, fs_root_hash })
+    Ok(AttachFsRequest {
+        turn_id,
+        fs_root_hash,
+    })
 }
 
 /// Encode ATTACH_FS response: turn_id (u64) + fs_root_hash (32 bytes)
@@ -213,7 +232,9 @@ pub fn encode_attach_fs_resp(turn_id: u64, fs_root_hash: &[u8; 32]) -> Result<Ve
 /// Parse PUT_BLOB request: hash (32 bytes) + data_len (u32) + data
 pub fn parse_put_blob(payload: &[u8]) -> Result<PutBlobRequest> {
     if payload.len() < 36 {
-        return Err(StoreError::InvalidInput("put_blob payload too short".into()));
+        return Err(StoreError::InvalidInput(
+            "put_blob payload too short".into(),
+        ));
     }
     let mut cursor = std::io::Cursor::new(payload);
     let mut hash = [0u8; 32];
@@ -232,7 +253,11 @@ pub fn encode_put_blob_resp(hash: &[u8; 32], was_new: bool) -> Result<Vec<u8>> {
     Ok(buf)
 }
 
-pub fn encode_ctx_create_resp(context_id: u64, head_turn_id: u64, head_depth: u32) -> Result<Vec<u8>> {
+pub fn encode_ctx_create_resp(
+    context_id: u64,
+    head_turn_id: u64,
+    head_depth: u32,
+) -> Result<Vec<u8>> {
     let mut buf = Vec::with_capacity(8 + 8 + 4);
     buf.write_u64::<LittleEndian>(context_id)?;
     buf.write_u64::<LittleEndian>(head_turn_id)?;
@@ -240,7 +265,12 @@ pub fn encode_ctx_create_resp(context_id: u64, head_turn_id: u64, head_depth: u3
     Ok(buf)
 }
 
-pub fn encode_append_ack(context_id: u64, new_turn_id: u64, new_depth: u32, hash: &[u8; 32]) -> Result<Vec<u8>> {
+pub fn encode_append_ack(
+    context_id: u64,
+    new_turn_id: u64,
+    new_depth: u32,
+    hash: &[u8; 32],
+) -> Result<Vec<u8>> {
     let mut buf = Vec::with_capacity(8 + 8 + 4 + 32);
     buf.write_u64::<LittleEndian>(context_id)?;
     buf.write_u64::<LittleEndian>(new_turn_id)?;
@@ -296,8 +326,10 @@ pub fn parse_hello(payload: &[u8]) -> Result<HelloRequest> {
     let client_meta_json = if client_meta_json_len > 0 {
         let mut meta_bytes = vec![0u8; client_meta_json_len];
         cursor.read_exact(&mut meta_bytes)?;
-        Some(String::from_utf8(meta_bytes)
-            .map_err(|_| StoreError::InvalidInput("client_meta_json not utf8".into()))?)
+        Some(
+            String::from_utf8(meta_bytes)
+                .map_err(|_| StoreError::InvalidInput("client_meta_json not utf8".into()))?,
+        )
     } else {
         None
     };

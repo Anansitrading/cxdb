@@ -107,26 +107,41 @@ impl SecondaryIndexes {
     fn index_metadata(&mut self, context_id: u64, metadata: &ContextMetadata) {
         // Tag
         if let Some(tag) = &metadata.client_tag {
-            self.tag_exact.entry(tag.clone()).or_default().insert(context_id);
+            self.tag_exact
+                .entry(tag.clone())
+                .or_default()
+                .insert(context_id);
             self.tag_sorted.push((tag.clone(), context_id));
             let lower = tag.to_lowercase();
-            self.tag_lower_exact.entry(lower.clone()).or_default().insert(context_id);
+            self.tag_lower_exact
+                .entry(lower.clone())
+                .or_default()
+                .insert(context_id);
             self.tag_lower_sorted.push((lower, context_id));
         }
 
         // Title
         if let Some(title) = &metadata.title {
-            self.title_exact.entry(title.clone()).or_default().insert(context_id);
+            self.title_exact
+                .entry(title.clone())
+                .or_default()
+                .insert(context_id);
             self.title_sorted.push((title.clone(), context_id));
             let lower = title.to_lowercase();
-            self.title_lower_exact.entry(lower.clone()).or_default().insert(context_id);
+            self.title_lower_exact
+                .entry(lower.clone())
+                .or_default()
+                .insert(context_id);
             self.title_lower_sorted.push((lower, context_id));
         }
 
         // Labels
         if let Some(labels) = &metadata.labels {
             for label in labels {
-                self.label_exact.entry(label.clone()).or_default().insert(context_id);
+                self.label_exact
+                    .entry(label.clone())
+                    .or_default()
+                    .insert(context_id);
             }
         }
 
@@ -134,36 +149,57 @@ impl SecondaryIndexes {
         if let Some(prov) = &metadata.provenance {
             // User (on_behalf_of)
             if let Some(user) = &prov.on_behalf_of {
-                self.user_exact.entry(user.clone()).or_default().insert(context_id);
+                self.user_exact
+                    .entry(user.clone())
+                    .or_default()
+                    .insert(context_id);
                 self.user_sorted.push((user.clone(), context_id));
                 let lower = user.to_lowercase();
-                self.user_lower_exact.entry(lower.clone()).or_default().insert(context_id);
+                self.user_lower_exact
+                    .entry(lower.clone())
+                    .or_default()
+                    .insert(context_id);
                 self.user_lower_sorted.push((lower, context_id));
             }
 
             // Service
             if let Some(service) = &prov.service_name {
-                self.service_exact.entry(service.clone()).or_default().insert(context_id);
+                self.service_exact
+                    .entry(service.clone())
+                    .or_default()
+                    .insert(context_id);
                 self.service_sorted.push((service.clone(), context_id));
                 let lower = service.to_lowercase();
-                self.service_lower_exact.entry(lower.clone()).or_default().insert(context_id);
+                self.service_lower_exact
+                    .entry(lower.clone())
+                    .or_default()
+                    .insert(context_id);
                 self.service_lower_sorted.push((lower, context_id));
             }
 
             // Host
             if let Some(host) = &prov.host_name {
-                self.host_exact.entry(host.clone()).or_default().insert(context_id);
+                self.host_exact
+                    .entry(host.clone())
+                    .or_default()
+                    .insert(context_id);
                 self.host_sorted.push((host.clone(), context_id));
             }
 
             // Trace ID
             if let Some(trace_id) = &prov.trace_id {
-                self.trace_id_exact.entry(trace_id.clone()).or_default().insert(context_id);
+                self.trace_id_exact
+                    .entry(trace_id.clone())
+                    .or_default()
+                    .insert(context_id);
             }
 
             // Parent context ID
             if let Some(parent) = prov.parent_context_id {
-                self.parent_exact.entry(parent).or_default().insert(context_id);
+                self.parent_exact
+                    .entry(parent)
+                    .or_default()
+                    .insert(context_id);
             }
 
             // Root context ID
@@ -227,7 +263,10 @@ impl SecondaryIndexes {
     }
 
     pub fn lookup_tag_exact_ci(&self, value: &str) -> HashSet<u64> {
-        self.tag_lower_exact.get(&value.to_lowercase()).cloned().unwrap_or_default()
+        self.tag_lower_exact
+            .get(&value.to_lowercase())
+            .cloned()
+            .unwrap_or_default()
     }
 
     pub fn lookup_title_exact(&self, value: &str) -> HashSet<u64> {
@@ -235,7 +274,10 @@ impl SecondaryIndexes {
     }
 
     pub fn lookup_title_exact_ci(&self, value: &str) -> HashSet<u64> {
-        self.title_lower_exact.get(&value.to_lowercase()).cloned().unwrap_or_default()
+        self.title_lower_exact
+            .get(&value.to_lowercase())
+            .cloned()
+            .unwrap_or_default()
     }
 
     pub fn lookup_label_exact(&self, value: &str) -> HashSet<u64> {
@@ -247,7 +289,10 @@ impl SecondaryIndexes {
     }
 
     pub fn lookup_user_exact_ci(&self, value: &str) -> HashSet<u64> {
-        self.user_lower_exact.get(&value.to_lowercase()).cloned().unwrap_or_default()
+        self.user_lower_exact
+            .get(&value.to_lowercase())
+            .cloned()
+            .unwrap_or_default()
     }
 
     pub fn lookup_service_exact(&self, value: &str) -> HashSet<u64> {
@@ -255,7 +300,10 @@ impl SecondaryIndexes {
     }
 
     pub fn lookup_service_exact_ci(&self, value: &str) -> HashSet<u64> {
-        self.service_lower_exact.get(&value.to_lowercase()).cloned().unwrap_or_default()
+        self.service_lower_exact
+            .get(&value.to_lowercase())
+            .cloned()
+            .unwrap_or_default()
     }
 
     pub fn lookup_host_exact(&self, value: &str) -> HashSet<u64> {
@@ -339,7 +387,10 @@ impl SecondaryIndexes {
 
     pub fn lookup_created_gt(&self, timestamp: u64) -> HashSet<u64> {
         self.created_btree
-            .range((std::ops::Bound::Excluded(timestamp), std::ops::Bound::Unbounded))
+            .range((
+                std::ops::Bound::Excluded(timestamp),
+                std::ops::Bound::Unbounded,
+            ))
             .flat_map(|(_, ids)| ids.iter().copied())
             .collect()
     }
@@ -366,7 +417,10 @@ impl SecondaryIndexes {
     }
 
     pub fn lookup_created_eq(&self, timestamp: u64) -> HashSet<u64> {
-        self.created_btree.get(&timestamp).cloned().unwrap_or_default()
+        self.created_btree
+            .get(&timestamp)
+            .cloned()
+            .unwrap_or_default()
     }
 
     pub fn lookup_depth_gt(&self, depth: u32) -> HashSet<u64> {

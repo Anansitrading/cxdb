@@ -69,7 +69,10 @@ impl std::fmt::Debug for TelemetryConfig {
         f.debug_struct("TelemetryConfig")
             .field("addr", &self.addr)
             .field("use_tls", &self.use_tls)
-            .field("client_opts", &format!("[{} options]", self.client_opts.len()))
+            .field(
+                "client_opts",
+                &format!("[{} options]", self.client_opts.len()),
+            )
             .field("queue_capacity", &self.queue_capacity)
             .field("reconnect_delay", &self.reconnect_delay)
             .finish()

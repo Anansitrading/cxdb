@@ -240,9 +240,7 @@ impl FsRootsIndex {
     pub fn stats(&self) -> FsRootsStats {
         FsRootsStats {
             entries_total: self.roots.len(),
-            file_bytes: std::fs::metadata(&self.path)
-                .map(|m| m.len())
-                .unwrap_or(0),
+            file_bytes: std::fs::metadata(&self.path).map(|m| m.len()).unwrap_or(0),
             content_bytes: 0, // Computed by Store::stats() which has blob_store access
         }
     }
@@ -270,7 +268,10 @@ pub struct FsRootsStats {
 }
 
 /// Load and deserialize tree entries from the blob store.
-pub fn load_tree_entries(blob_store: &mut BlobStore, tree_hash: &[u8; 32]) -> Result<Vec<TreeEntry>> {
+pub fn load_tree_entries(
+    blob_store: &mut BlobStore,
+    tree_hash: &[u8; 32],
+) -> Result<Vec<TreeEntry>> {
     let bytes = blob_store.get(tree_hash)?;
     parse_tree_entries(&bytes)
 }
@@ -403,9 +404,7 @@ pub fn resolve_path(
 
         // Must be a directory to continue
         if entry.kind_enum() != EntryKind::Directory {
-            return Err(StoreError::InvalidInput(format!(
-                "not a directory: {part}"
-            )));
+            return Err(StoreError::InvalidInput(format!("not a directory: {part}")));
         }
 
         current_hash = entry_hash;
@@ -465,9 +464,7 @@ pub fn get_file_at_path(
 
         // Must be a directory to continue
         if entry.kind_enum() != EntryKind::Directory {
-            return Err(StoreError::InvalidInput(format!(
-                "not a directory: {part}"
-            )));
+            return Err(StoreError::InvalidInput(format!("not a directory: {part}")));
         }
 
         current_hash = entry_hash;

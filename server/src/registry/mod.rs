@@ -188,7 +188,12 @@ impl Registry {
     }
 
     pub fn get_latest_type_version(&self, type_id: &str) -> Option<&TypeVersionSpec> {
-        self.types.get(type_id)?.versions.iter().next_back().map(|(_, v)| v)
+        self.types
+            .get(type_id)?
+            .versions
+            .iter()
+            .next_back()
+            .map(|(_, v)| v)
     }
 
     pub fn get_enum(&self, enum_id: &str) -> Option<&HashMap<String, String>> {
@@ -220,7 +225,9 @@ impl Registry {
 
     fn ingest_bundle(&mut self, bundle: RegistryBundle, raw: &[u8], loading: bool) -> Result<()> {
         if bundle.registry_version == 0 {
-            return Err(StoreError::InvalidInput("registry_version must be > 0".into()));
+            return Err(StoreError::InvalidInput(
+                "registry_version must be > 0".into(),
+            ));
         }
 
         // Merge enums

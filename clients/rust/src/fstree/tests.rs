@@ -37,7 +37,11 @@ fn seed_workspace(root: &std::path::Path) {
     fs::create_dir_all(root.join("src")).unwrap();
     write_file(root.join("README.md"), b"# Test", 0o644);
     write_file(root.join("src").join("main.go"), b"package main", 0o644);
-    write_file(root.join("src").join("lib.go"), b"package main\n\nfunc foo() {}", 0o644);
+    write_file(
+        root.join("src").join("lib.go"),
+        b"package main\n\nfunc foo() {}",
+        0o644,
+    );
     write_file(root.join("script.sh"), b"#!/bin/bash\necho hi", 0o755);
 }
 
@@ -68,8 +72,14 @@ fn blake3_hashes_match_fixture() {
     let fixture = load_fixture();
     let empty = blake3::hash(&[]);
     let hello = blake3::hash(b"hello");
-    assert_eq!(fixture.blake3.get("empty").unwrap(), &hex::encode(empty.as_bytes()));
-    assert_eq!(fixture.blake3.get("hello").unwrap(), &hex::encode(hello.as_bytes()));
+    assert_eq!(
+        fixture.blake3.get("empty").unwrap(),
+        &hex::encode(empty.as_bytes())
+    );
+    assert_eq!(
+        fixture.blake3.get("hello").unwrap(),
+        &hex::encode(hello.as_bytes())
+    );
 }
 
 #[test]
@@ -138,7 +148,11 @@ fn capture_exclude_patterns() {
     fs::create_dir_all(dir.path().join("node_modules").join("pkg")).unwrap();
     fs::write(dir.path().join("main.js"), "console.log('hi')").unwrap();
     fs::write(dir.path().join("debug.log"), "debug info").unwrap();
-    fs::write(dir.path().join("node_modules").join("pkg").join("index.js"), "module").unwrap();
+    fs::write(
+        dir.path().join("node_modules").join("pkg").join("index.js"),
+        "module",
+    )
+    .unwrap();
 
     let snap = capture(
         dir.path(),
@@ -172,8 +186,16 @@ fn capture_mode_bits() {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join("script.sh"), "#!/bin/bash").unwrap();
     fs::write(dir.path().join("data.txt"), "data").unwrap();
-    fs::set_permissions(dir.path().join("script.sh"), fs::Permissions::from_mode(0o755)).unwrap();
-    fs::set_permissions(dir.path().join("data.txt"), fs::Permissions::from_mode(0o644)).unwrap();
+    fs::set_permissions(
+        dir.path().join("script.sh"),
+        fs::Permissions::from_mode(0o755),
+    )
+    .unwrap();
+    fs::set_permissions(
+        dir.path().join("data.txt"),
+        fs::Permissions::from_mode(0o644),
+    )
+    .unwrap();
 
     let snap = capture(dir.path(), Vec::<SnapshotOption>::new()).unwrap();
     let entries = snap.get_root_entries().unwrap();
@@ -217,7 +239,11 @@ fn snapshot_diff_tracks_changes() {
 fn snapshot_get_file_at_path() {
     let dir = TempDir::new().unwrap();
     fs::create_dir_all(dir.path().join("src").join("pkg")).unwrap();
-    fs::write(dir.path().join("src").join("pkg").join("main.go"), "package main").unwrap();
+    fs::write(
+        dir.path().join("src").join("pkg").join("main.go"),
+        "package main",
+    )
+    .unwrap();
 
     let snap = capture(dir.path(), Vec::<SnapshotOption>::new()).unwrap();
     let (entry, file) = snap
@@ -268,7 +294,10 @@ fn tracker_snapshot_if_changed() {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join("file.txt"), "content").unwrap();
 
-    let tracker = Tracker::new(dir.path().to_string_lossy().to_string(), Vec::<SnapshotOption>::new());
+    let tracker = Tracker::new(
+        dir.path().to_string_lossy().to_string(),
+        Vec::<SnapshotOption>::new(),
+    );
     let (snap1, changed1) = tracker.snapshot_if_changed().unwrap();
     assert!(changed1);
     assert!(snap1.is_some());

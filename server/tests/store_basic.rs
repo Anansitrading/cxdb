@@ -1,8 +1,8 @@
 // Copyright 2025 StrongDM Inc
 // SPDX-License-Identifier: Apache-2.0
 
-use cxdb_server::store::Store;
 use blake3::Hasher;
+use cxdb_server::store::Store;
 use tempfile::tempdir;
 
 #[test]

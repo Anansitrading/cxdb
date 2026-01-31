@@ -34,7 +34,14 @@ pub fn start_http(
         .map_err(|e| StoreError::InvalidInput(format!("http bind error: {e}")))?;
     let handle = thread::spawn(move || {
         for request in server.incoming_requests() {
-            if let Err(err) = handle_request(request, &store, &registry, &metrics, &session_tracker, &event_bus) {
+            if let Err(err) = handle_request(
+                request,
+                &store,
+                &registry,
+                &metrics,
+                &session_tracker,
+                &event_bus,
+            ) {
                 eprintln!("http error: {err}");
             }
         }
@@ -69,7 +76,8 @@ fn handle_request(
     let result: Result<HttpResponse> = (|| {
         let method = request.method().clone();
         let url_str = format!("http://localhost{}", request.url());
-        let url = Url::parse(&url_str).map_err(|_| StoreError::InvalidInput("invalid url".into()))?;
+        let url =
+            Url::parse(&url_str).map_err(|_| StoreError::InvalidInput("invalid url".into()))?;
         let segments: Vec<String> = url
             .path_segments()
             .map(|c| c.map(|s| s.to_string()).collect())
@@ -78,16 +86,14 @@ fn handle_request(
 
         match (method, segments_ref.as_slice()) {
             // Health check endpoint
-            (Method::Get, ["healthz"]) => {
-                Ok((
-                    200,
-                    Response::from_data(b"ok".to_vec())
-                        .with_status_code(StatusCode(200))
-                        .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"text/plain"[..]).unwrap(),
-                        ),
-                ))
-            }
+            (Method::Get, ["healthz"]) => Ok((
+                200,
+                Response::from_data(b"ok".to_vec())
+                    .with_status_code(StatusCode(200))
+                    .with_header(
+                        Header::from_bytes(&b"Content-Type"[..], &b"text/plain"[..]).unwrap(),
+                    ),
+            )),
             (Method::Put, ["v1", "registry", "bundles", _bundle_id_raw]) => {
                 let mut body = Vec::new();
                 request.as_reader().read_to_end(&mut body)?;
@@ -96,23 +102,26 @@ fn handle_request(
                 let body_id = bundle.bundle_id.clone();
                 let mut registry = registry.lock().unwrap();
                 match registry.put_bundle(&body_id, &body)? {
-                    PutOutcome::AlreadyExists => {
-                        Ok((
-                            204,
-                            Response::from_data(Vec::new()).with_status_code(StatusCode(204)),
-                        ))
-                    }
+                    PutOutcome::AlreadyExists => Ok((
+                        204,
+                        Response::from_data(Vec::new()).with_status_code(StatusCode(204)),
+                    )),
                     PutOutcome::Created => {
                         metrics.record_registry_ingest();
-                        let bytes = serde_json::to_vec(&json!({"bundle_id": body_id}))
-                            .map_err(|e| StoreError::InvalidInput(format!("json encode error: {e}")))?;
+                        let bytes =
+                            serde_json::to_vec(&json!({"bundle_id": body_id})).map_err(|e| {
+                                StoreError::InvalidInput(format!("json encode error: {e}"))
+                            })?;
                         Ok((
                             201,
                             Response::from_data(bytes)
                                 .with_status_code(StatusCode(201))
                                 .with_header(
-                                    Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
-                                        .unwrap(),
+                                    Header::from_bytes(
+                                        &b"Content-Type"[..],
+                                        &b"application/json"[..],
+                                    )
+                                    .unwrap(),
                                 ),
                         ))
                     }
@@ -141,7 +150,8 @@ fn handle_request(
                     Response::from_data(bundle.to_vec())
                         .with_status_code(StatusCode(200))
                         .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                                .unwrap(),
                         )
                         .with_header(Header::from_bytes(&b"ETag"[..], etag.as_bytes()).unwrap()),
                 ))
@@ -162,7 +172,8 @@ fn handle_request(
                     Response::from_data(bytes)
                         .with_status_code(StatusCode(200))
                         .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                                .unwrap(),
                         ),
                 ))
             }
@@ -181,7 +192,8 @@ fn handle_request(
                     Response::from_data(bytes)
                         .with_status_code(StatusCode(200))
                         .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                                .unwrap(),
                         ),
                 ))
             }
@@ -192,7 +204,10 @@ fn handle_request(
                     .and_then(|v| v.parse::<u32>().ok())
                     .unwrap_or(20);
                 let tag_filter = params.get("tag").cloned();
-                let include_provenance = params.get("include_provenance").map(|v| v == "1").unwrap_or(false);
+                let include_provenance = params
+                    .get("include_provenance")
+                    .map(|v| v == "1")
+                    .unwrap_or(false);
 
                 let mut store = store.lock().unwrap();
                 let contexts = store.list_recent_contexts(limit);
@@ -248,9 +263,12 @@ fn handle_request(
                                     // Clone provenance and inject server-side client_address if not present
                                     let mut prov_with_server_info = prov.clone();
                                     if prov_with_server_info.client_address.is_none() {
-                                        prov_with_server_info.client_address = session_peer_addr.clone();
+                                        prov_with_server_info.client_address =
+                                            session_peer_addr.clone();
                                     }
-                                    if let Ok(prov_json) = serde_json::to_value(&prov_with_server_info) {
+                                    if let Ok(prov_json) =
+                                        serde_json::to_value(&prov_with_server_info)
+                                    {
                                         obj["provenance"] = prov_json;
                                     }
                                 }
@@ -297,7 +315,8 @@ fn handle_request(
                     Response::from_data(bytes)
                         .with_status_code(StatusCode(200))
                         .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                                .unwrap(),
                         ),
                 ))
             }
@@ -305,9 +324,7 @@ fn handle_request(
             (Method::Get, ["v1", "contexts", "search"]) => {
                 let params = parse_query(url.query().unwrap_or(""));
                 let query = params.get("q").cloned().unwrap_or_default();
-                let limit = params
-                    .get("limit")
-                    .and_then(|v| v.parse::<u32>().ok());
+                let limit = params.get("limit").and_then(|v| v.parse::<u32>().ok());
 
                 if query.is_empty() {
                     return Ok((
@@ -320,7 +337,8 @@ fn handle_request(
                         )
                         .with_status_code(StatusCode(400))
                         .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                                .unwrap(),
                         ),
                     ));
                 }
@@ -349,7 +367,11 @@ fn handle_request(
                                 });
 
                                 // Add metadata if available (use cached data)
-                                if let Some(metadata) = store.context_metadata_cache.get(&context_id).and_then(|m| m.as_ref()) {
+                                if let Some(metadata) = store
+                                    .context_metadata_cache
+                                    .get(&context_id)
+                                    .and_then(|m| m.as_ref())
+                                {
                                     if let Some(ref tag) = metadata.client_tag {
                                         obj["client_tag"] = JsonValue::String(tag.clone());
                                     }
@@ -369,14 +391,19 @@ fn handle_request(
                             "query": result.query.raw,
                         });
 
-                        let bytes = serde_json::to_vec(&resp)
-                            .map_err(|e| StoreError::InvalidInput(format!("json encode error: {e}")))?;
+                        let bytes = serde_json::to_vec(&resp).map_err(|e| {
+                            StoreError::InvalidInput(format!("json encode error: {e}"))
+                        })?;
                         Ok((
                             200,
                             Response::from_data(bytes)
                                 .with_status_code(StatusCode(200))
                                 .with_header(
-                                    Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                                    Header::from_bytes(
+                                        &b"Content-Type"[..],
+                                        &b"application/json"[..],
+                                    )
+                                    .unwrap(),
                                 ),
                         ))
                     }
@@ -387,14 +414,19 @@ fn handle_request(
                             "position": cql_error.position,
                             "field": cql_error.field,
                         });
-                        let bytes = serde_json::to_vec(&resp)
-                            .map_err(|e| StoreError::InvalidInput(format!("json encode error: {e}")))?;
+                        let bytes = serde_json::to_vec(&resp).map_err(|e| {
+                            StoreError::InvalidInput(format!("json encode error: {e}"))
+                        })?;
                         Ok((
                             400,
                             Response::from_data(bytes)
                                 .with_status_code(StatusCode(400))
                                 .with_header(
-                                    Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                                    Header::from_bytes(
+                                        &b"Content-Type"[..],
+                                        &b"application/json"[..],
+                                    )
+                                    .unwrap(),
                                 ),
                         ))
                     }
@@ -444,7 +476,8 @@ fn handle_request(
                     Response::from_data(bytes)
                         .with_status_code(StatusCode(200))
                         .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                                .unwrap(),
                         ),
                 ))
             }
@@ -521,11 +554,12 @@ fn handle_request(
 
                     let (decoded_type_id, decoded_type_version) = match type_hint_mode {
                         "explicit" => {
-                            let id = as_type_id
-                                .clone()
-                                .ok_or_else(|| StoreError::InvalidInput("as_type_id required".into()))?;
-                            let ver = as_type_version
-                                .ok_or_else(|| StoreError::InvalidInput("as_type_version required".into()))?;
+                            let id = as_type_id.clone().ok_or_else(|| {
+                                StoreError::InvalidInput("as_type_id required".into())
+                            })?;
+                            let ver = as_type_version.ok_or_else(|| {
+                                StoreError::InvalidInput("as_type_version required".into())
+                            })?;
                             (id, ver)
                         }
                         "latest" => {
@@ -587,7 +621,10 @@ fn handle_request(
                             "content_hash_b3".into(),
                             JsonValue::String(hex::encode(item.record.payload_hash)),
                         );
-                        turn_obj.insert("encoding".into(), JsonValue::Number(item.meta.encoding.into()));
+                        turn_obj.insert(
+                            "encoding".into(),
+                            JsonValue::Number(item.meta.encoding.into()),
+                        );
                         turn_obj.insert("compression".into(), JsonValue::Number(0u32.into()));
                         turn_obj.insert(
                             "uncompressed_len".into(),
@@ -598,7 +635,8 @@ fn handle_request(
                                 turn_obj.insert(
                                     "bytes_b64".into(),
                                     JsonValue::String(
-                                        base64::engine::general_purpose::STANDARD.encode(raw_payload),
+                                        base64::engine::general_purpose::STANDARD
+                                            .encode(raw_payload),
                                     ),
                                 );
                             }
@@ -641,7 +679,8 @@ fn handle_request(
                     Response::from_data(bytes)
                         .with_status_code(StatusCode(200))
                         .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                                .unwrap(),
                         ),
                 ))
             }
@@ -656,7 +695,8 @@ fn handle_request(
                     Response::from_data(bytes)
                         .with_status_code(StatusCode(200))
                         .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                                .unwrap(),
                         ),
                 ))
             }
@@ -710,7 +750,8 @@ fn handle_request(
                     Response::from_data(bytes)
                         .with_status_code(StatusCode(200))
                         .with_header(
-                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                            Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                                .unwrap(),
                         ),
                 ))
             }
@@ -753,14 +794,19 @@ fn handle_request(
                                     &content
                                 ),
                             });
-                            let bytes = serde_json::to_vec(&resp)
-                                .map_err(|e| StoreError::InvalidInput(format!("json encode error: {e}")))?;
+                            let bytes = serde_json::to_vec(&resp).map_err(|e| {
+                                StoreError::InvalidInput(format!("json encode error: {e}"))
+                            })?;
                             Ok((
                                 200,
                                 Response::from_data(bytes)
                                     .with_status_code(StatusCode(200))
                                     .with_header(
-                                        Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                                        Header::from_bytes(
+                                            &b"Content-Type"[..],
+                                            &b"application/json"[..],
+                                        )
+                                        .unwrap(),
                                     ),
                             ))
                         } else {
@@ -771,22 +817,34 @@ fn handle_request(
                                 Response::from_data(content)
                                     .with_status_code(StatusCode(200))
                                     .with_header(
-                                        Header::from_bytes(&b"Content-Type"[..], content_type.as_bytes()).unwrap(),
+                                        Header::from_bytes(
+                                            &b"Content-Type"[..],
+                                            content_type.as_bytes(),
+                                        )
+                                        .unwrap(),
                                     )
                                     .with_header(
-                                        Header::from_bytes(&b"X-Fs-Hash"[..], hex::encode(&entry.hash).as_bytes()).unwrap(),
+                                        Header::from_bytes(
+                                            &b"X-Fs-Hash"[..],
+                                            hex::encode(&entry.hash).as_bytes(),
+                                        )
+                                        .unwrap(),
                                     )
                                     .with_header(
-                                        Header::from_bytes(&b"X-Fs-Mode"[..], format!("{:o}", entry.mode).as_bytes()).unwrap(),
+                                        Header::from_bytes(
+                                            &b"X-Fs-Mode"[..],
+                                            format!("{:o}", entry.mode).as_bytes(),
+                                        )
+                                        .unwrap(),
                                     ),
                             ))
                         }
                     }
                     Err(StoreError::InvalidInput(msg)) if msg.contains("directory") => {
                         // Path is a directory - return listing instead
-                        let fs_root = store
-                            .get_fs_root(turn_id)
-                            .ok_or_else(|| StoreError::NotFound("no fs snapshot for turn".into()))?;
+                        let fs_root = store.get_fs_root(turn_id).ok_or_else(|| {
+                            StoreError::NotFound("no fs snapshot for turn".into())
+                        })?;
 
                         let entries = store.list_fs_entries(turn_id, &path)?;
 
@@ -815,14 +873,19 @@ fn handle_request(
                             "entries": entries_json,
                         });
 
-                        let bytes = serde_json::to_vec(&resp)
-                            .map_err(|e| StoreError::InvalidInput(format!("json encode error: {e}")))?;
+                        let bytes = serde_json::to_vec(&resp).map_err(|e| {
+                            StoreError::InvalidInput(format!("json encode error: {e}"))
+                        })?;
                         Ok((
                             200,
                             Response::from_data(bytes)
                                 .with_status_code(StatusCode(200))
                                 .with_header(
-                                    Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                                    Header::from_bytes(
+                                        &b"Content-Type"[..],
+                                        &b"application/json"[..],
+                                    )
+                                    .unwrap(),
                                 ),
                         ))
                     }

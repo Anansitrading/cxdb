@@ -27,11 +27,17 @@ pub fn execute(
         }
         Expression::Not { inner } => {
             let inner_result = execute(inner, indexes, live_contexts)?;
-            Ok(indexes.all_contexts().difference(&inner_result).copied().collect())
+            Ok(indexes
+                .all_contexts()
+                .difference(&inner_result)
+                .copied()
+                .collect())
         }
-        Expression::Comparison { field, operator, value } => {
-            execute_comparison(field, *operator, value, indexes, live_contexts)
-        }
+        Expression::Comparison {
+            field,
+            operator,
+            value,
+        } => execute_comparison(field, *operator, value, indexes, live_contexts),
     }
 }
 
@@ -155,7 +161,11 @@ fn execute_string_field(
                 StringField::Service => indexes.lookup_service_exact(s),
                 StringField::Host => indexes.lookup_host_exact(s),
             };
-            Ok(indexes.all_contexts().difference(&matches).copied().collect())
+            Ok(indexes
+                .all_contexts()
+                .difference(&matches)
+                .copied()
+                .collect())
         }
         Operator::In => {
             let list = value.as_list().ok_or_else(|| CqlError {
@@ -267,7 +277,11 @@ fn execute_label(
                 field: None,
             })?;
             let matches = indexes.lookup_label_exact(s);
-            Ok(indexes.all_contexts().difference(&matches).copied().collect())
+            Ok(indexes
+                .all_contexts()
+                .difference(&matches)
+                .copied()
+                .collect())
         }
         Operator::In => {
             let list = value.as_list().ok_or_else(|| CqlError {
@@ -316,7 +330,11 @@ fn execute_trace_id(
                 field: None,
             })?;
             let matches = indexes.lookup_trace_id_exact(s);
-            Ok(indexes.all_contexts().difference(&matches).copied().collect())
+            Ok(indexes
+                .all_contexts()
+                .difference(&matches)
+                .copied()
+                .collect())
         }
         _ => Err(CqlError {
             error_type: CqlErrorType::InvalidOperator,
@@ -350,7 +368,11 @@ fn execute_parent(
                 field: None,
             })?;
             let matches = indexes.lookup_parent_exact(id);
-            Ok(indexes.all_contexts().difference(&matches).copied().collect())
+            Ok(indexes
+                .all_contexts()
+                .difference(&matches)
+                .copied()
+                .collect())
         }
         Operator::In => {
             let list = value.as_list().ok_or_else(|| CqlError {
@@ -399,7 +421,11 @@ fn execute_root(
                 field: None,
             })?;
             let matches = indexes.lookup_root_exact(id);
-            Ok(indexes.all_contexts().difference(&matches).copied().collect())
+            Ok(indexes
+                .all_contexts()
+                .difference(&matches)
+                .copied()
+                .collect())
         }
         Operator::In => {
             let list = value.as_list().ok_or_else(|| CqlError {
@@ -436,7 +462,11 @@ fn execute_created(
         Operator::Eq => Ok(indexes.lookup_created_eq(timestamp)),
         Operator::Neq => {
             let matches = indexes.lookup_created_eq(timestamp);
-            Ok(indexes.all_contexts().difference(&matches).copied().collect())
+            Ok(indexes
+                .all_contexts()
+                .difference(&matches)
+                .copied()
+                .collect())
         }
         Operator::Gt => Ok(indexes.lookup_created_gt(timestamp)),
         Operator::Gte => Ok(indexes.lookup_created_gte(timestamp)),
@@ -467,7 +497,11 @@ fn execute_depth(
         Operator::Eq => Ok(indexes.lookup_depth_eq(depth)),
         Operator::Neq => {
             let matches = indexes.lookup_depth_eq(depth);
-            Ok(indexes.all_contexts().difference(&matches).copied().collect())
+            Ok(indexes
+                .all_contexts()
+                .difference(&matches)
+                .copied()
+                .collect())
         }
         Operator::Gt => Ok(indexes.lookup_depth_gt(depth)),
         Operator::Gte => Ok(indexes.lookup_depth_gte(depth)),
@@ -505,7 +539,11 @@ fn execute_is_live(
             if is_live {
                 Ok(live_contexts.clone())
             } else {
-                Ok(indexes.all_contexts().difference(live_contexts).copied().collect())
+                Ok(indexes
+                    .all_contexts()
+                    .difference(live_contexts)
+                    .copied()
+                    .collect())
             }
         }
         _ => Err(CqlError {
@@ -593,8 +631,10 @@ fn parse_absolute_date(value: &str) -> Result<u64, CqlError> {
     // Try date-only format (YYYY-MM-DD)
     if let Ok(date) = chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d") {
         let dt = date.and_hms_opt(0, 0, 0).unwrap();
-        return Ok(chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(dt, chrono::Utc)
-            .timestamp_millis() as u64);
+        return Ok(
+            chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(dt, chrono::Utc)
+                .timestamp_millis() as u64,
+        );
     }
 
     Err(CqlError {

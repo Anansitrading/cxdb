@@ -75,7 +75,9 @@ fn msgpack_key_types_match_expectations() {
         Value::Map(entries) => entries,
         _ => panic!("expected map"),
     };
-    assert!(map.iter().any(|(k, _)| matches!(k, Value::String(s) if s.as_str() == Some("1"))));
+    assert!(map
+        .iter()
+        .any(|(k, _)| matches!(k, Value::String(s) if s.as_str() == Some("1"))));
 
     let numeric_map = BTreeMap::from([(1u64, "one".to_string())]);
     let payload = encode_msgpack(&numeric_map).unwrap();
@@ -103,7 +105,10 @@ fn decode_msgpack_into_conversation_item() {
     let item: ConversationItem = decode_msgpack_into(&bytes).unwrap();
     assert_eq!(item.id, "item-1");
     assert_eq!(item.item_type, ItemTypeUserInput);
-    assert_eq!(item.user_input.as_ref().unwrap().text, "Hello from fixtures");
+    assert_eq!(
+        item.user_input.as_ref().unwrap().text,
+        "Hello from fixtures"
+    );
 }
 
 #[test]
@@ -157,7 +162,10 @@ fn with_env_vars_respects_allowlist() {
         ]))],
     );
     let env = p.env_vars.expect("env vars");
-    assert_eq!(env.get("TEST_PROV_VAR").map(String::as_str), Some("test-value"));
+    assert_eq!(
+        env.get("TEST_PROV_VAR").map(String::as_str),
+        Some("test-value")
+    );
     assert!(!env.contains_key("NONEXISTENT_VAR"));
     std::env::remove_var("TEST_PROV_VAR");
 }

@@ -6,7 +6,7 @@ use std::io::Read;
 
 use crate::client::{Client, RequestContext};
 use crate::error::{Error, Result};
-use crate::protocol::{MSG_APPEND_TURN, MSG_ATTACH_FS, MSG_PUT_BLOB, ENCODING_MSGPACK};
+use crate::protocol::{ENCODING_MSGPACK, MSG_APPEND_TURN, MSG_ATTACH_FS, MSG_PUT_BLOB};
 use crate::turn::{AppendRequest, AppendResult};
 
 #[derive(Debug, Clone)]
@@ -80,7 +80,11 @@ impl Client {
         })
     }
 
-    pub fn put_blob_if_absent(&self, ctx: &RequestContext, data: Vec<u8>) -> Result<( [u8; 32], bool )> {
+    pub fn put_blob_if_absent(
+        &self,
+        ctx: &RequestContext,
+        data: Vec<u8>,
+    ) -> Result<([u8; 32], bool)> {
         let result = self.put_blob(ctx, &PutBlobRequest { data })?;
         Ok((result.hash, result.was_new))
     }
@@ -149,21 +153,35 @@ mod tests {
     use crate::test_util::{decode_hex, load_fixture};
 
     fn build_append_payload(req: &AppendRequest, fs_root_hash: Option<[u8; 32]>) -> Vec<u8> {
-        let encoding = if req.encoding == 0 { ENCODING_MSGPACK } else { req.encoding };
+        let encoding = if req.encoding == 0 {
+            ENCODING_MSGPACK
+        } else {
+            req.encoding
+        };
         let hash = blake3::hash(&req.payload);
         let mut payload = Vec::new();
         payload.write_u64::<LittleEndian>(req.context_id).unwrap();
-        payload.write_u64::<LittleEndian>(req.parent_turn_id).unwrap();
-        payload.write_u32::<LittleEndian>(req.type_id.len() as u32).unwrap();
+        payload
+            .write_u64::<LittleEndian>(req.parent_turn_id)
+            .unwrap();
+        payload
+            .write_u32::<LittleEndian>(req.type_id.len() as u32)
+            .unwrap();
         payload.extend_from_slice(req.type_id.as_bytes());
         payload.write_u32::<LittleEndian>(req.type_version).unwrap();
         payload.write_u32::<LittleEndian>(encoding).unwrap();
         payload.write_u32::<LittleEndian>(req.compression).unwrap();
-        payload.write_u32::<LittleEndian>(req.payload.len() as u32).unwrap();
+        payload
+            .write_u32::<LittleEndian>(req.payload.len() as u32)
+            .unwrap();
         payload.extend_from_slice(hash.as_bytes());
-        payload.write_u32::<LittleEndian>(req.payload.len() as u32).unwrap();
+        payload
+            .write_u32::<LittleEndian>(req.payload.len() as u32)
+            .unwrap();
         payload.extend_from_slice(&req.payload);
-        payload.write_u32::<LittleEndian>(req.idempotency_key.len() as u32).unwrap();
+        payload
+            .write_u32::<LittleEndian>(req.idempotency_key.len() as u32)
+            .unwrap();
         if !req.idempotency_key.is_empty() {
             payload.extend_from_slice(&req.idempotency_key);
         }
@@ -190,7 +208,9 @@ mod tests {
         let hash = blake3::hash(data);
         let mut payload = Vec::new();
         payload.extend_from_slice(hash.as_bytes());
-        payload.write_u32::<LittleEndian>(data.len() as u32).unwrap();
+        payload
+            .write_u32::<LittleEndian>(data.len() as u32)
+            .unwrap();
         payload.extend_from_slice(data);
         assert_eq!(decode_hex(&fixture.payload_hex), payload);
 

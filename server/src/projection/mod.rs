@@ -109,7 +109,10 @@ fn normalize_tags(value: &Value) -> Result<HashMap<u64, Value>> {
 
 fn key_to_tag(key: &Value) -> Option<u64> {
     match key {
-        Value::Integer(int) => int.as_u64().or_else(|| int.as_i64().and_then(|v| if v >= 0 { Some(v as u64) } else { None })),
+        Value::Integer(int) => int.as_u64().or_else(|| {
+            int.as_i64()
+                .and_then(|v| if v >= 0 { Some(v as u64) } else { None })
+        }),
         Value::String(s) => s.as_str()?.parse::<u64>().ok(),
         _ => None,
     }
@@ -216,7 +219,10 @@ fn render_value(value: &Value, options: &RenderOptions) -> JsonValue {
             for (k, v) in map.iter() {
                 let key = match k {
                     Value::String(s) => s.as_str().unwrap_or("").to_string(),
-                    Value::Integer(int) => int.as_u64().map(|v| v.to_string()).unwrap_or_else(|| "".into()),
+                    Value::Integer(int) => int
+                        .as_u64()
+                        .map(|v| v.to_string())
+                        .unwrap_or_else(|| "".into()),
                     _ => "".into(),
                 };
                 obj.insert(key, render_value(v, options));
@@ -269,7 +275,9 @@ fn render_bytes(value: &Value, options: &RenderOptions) -> JsonValue {
     };
 
     match options.bytes_render {
-        BytesRender::Base64 => JsonValue::String(base64::engine::general_purpose::STANDARD.encode(bytes)),
+        BytesRender::Base64 => {
+            JsonValue::String(base64::engine::general_purpose::STANDARD.encode(bytes))
+        }
         BytesRender::Hex => JsonValue::String(hex::encode(bytes)),
         BytesRender::LenOnly => JsonValue::Number(Number::from(bytes.len() as u64)),
     }
@@ -332,14 +340,25 @@ fn render_time(value: &Value, options: &RenderOptions) -> JsonValue {
 
 fn value_to_u64(value: &Value) -> Option<u64> {
     match value {
-        Value::Integer(int) => int.as_u64().or_else(|| int.as_i64().and_then(|v| if v >= 0 { Some(v as u64) } else { None })),
+        Value::Integer(int) => int.as_u64().or_else(|| {
+            int.as_i64()
+                .and_then(|v| if v >= 0 { Some(v as u64) } else { None })
+        }),
         _ => None,
     }
 }
 
 fn value_to_i64(value: &Value) -> Option<i64> {
     match value {
-        Value::Integer(int) => int.as_i64().or_else(|| int.as_u64().and_then(|v| if v <= i64::MAX as u64 { Some(v as i64) } else { None })),
+        Value::Integer(int) => int.as_i64().or_else(|| {
+            int.as_u64().and_then(|v| {
+                if v <= i64::MAX as u64 {
+                    Some(v as i64)
+                } else {
+                    None
+                }
+            })
+        }),
         _ => None,
     }
 }

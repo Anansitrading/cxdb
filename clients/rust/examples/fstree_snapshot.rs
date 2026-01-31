@@ -19,7 +19,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let payload = encode_msgpack(&new_user_input("Captured snapshot", Vec::new()))?;
     let append = client.append_turn_with_fs(
         &ctx,
-        &AppendRequest::new(head.context_id, TypeIDConversationItem, TypeVersionConversationItem, payload),
+        &AppendRequest::new(
+            head.context_id,
+            TypeIDConversationItem,
+            TypeVersionConversationItem,
+            payload,
+        ),
         Some(snapshot.root_hash),
     )?;
 

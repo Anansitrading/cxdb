@@ -195,7 +195,11 @@ pub struct Position {
 impl std::fmt::Display for CqlError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(pos) = &self.position {
-            write!(f, "{} (line {}, column {})", self.message, pos.line, pos.column)
+            write!(
+                f,
+                "{} (line {}, column {})",
+                self.message, pos.line, pos.column
+            )
         } else {
             write!(f, "{}", self.message)
         }

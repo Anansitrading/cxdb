@@ -19,9 +19,9 @@ use crate::store::Store;
 pub struct ClientSession {
     pub session_id: u64,
     pub client_tag: String,
-    pub peer_addr: Option<String>,  // Client IP:port from TCP connection
-    pub connected_at: u64,          // unix_ms
-    pub last_activity_at: u64,      // unix_ms
+    pub peer_addr: Option<String>, // Client IP:port from TCP connection
+    pub connected_at: u64,         // unix_ms
+    pub last_activity_at: u64,     // unix_ms
     pub contexts_created: Vec<u64>, // context IDs created by this session
 }
 
@@ -55,7 +55,11 @@ impl SessionTracker {
 
     /// Get the peer address for a session.
     pub fn get_peer_addr(&self, session_id: u64) -> Option<String> {
-        self.sessions.read().unwrap().get(&session_id).and_then(|s| s.peer_addr.clone())
+        self.sessions
+            .read()
+            .unwrap()
+            .get(&session_id)
+            .and_then(|s| s.peer_addr.clone())
     }
 
     /// Record activity for a session (updates last_activity_at).
@@ -68,7 +72,10 @@ impl SessionTracker {
 
     /// Associate a context with a session.
     pub fn add_context(&self, session_id: u64, context_id: u64) {
-        self.context_to_session.write().unwrap().insert(context_id, session_id);
+        self.context_to_session
+            .write()
+            .unwrap()
+            .insert(context_id, session_id);
         if let Some(session) = self.sessions.write().unwrap().get_mut(&session_id) {
             if !session.contexts_created.contains(&context_id) {
                 session.contexts_created.push(context_id);
@@ -105,17 +112,29 @@ impl SessionTracker {
 
     /// Get all context IDs that have active sessions (are "live").
     pub fn get_live_context_ids(&self) -> std::collections::HashSet<u64> {
-        self.context_to_session.read().unwrap().keys().copied().collect()
+        self.context_to_session
+            .read()
+            .unwrap()
+            .keys()
+            .copied()
+            .collect()
     }
 
     /// Get the client tag for a session.
     pub fn get_client_tag(&self, session_id: u64) -> Option<String> {
-        self.sessions.read().unwrap().get(&session_id).map(|s| s.client_tag.clone())
+        self.sessions
+            .read()
+            .unwrap()
+            .get(&session_id)
+            .map(|s| s.client_tag.clone())
     }
 
     /// Check if a context is live (has an active session).
     pub fn is_context_live(&self, context_id: u64) -> bool {
-        self.context_to_session.read().unwrap().contains_key(&context_id)
+        self.context_to_session
+            .read()
+            .unwrap()
+            .contains_key(&context_id)
     }
 
     /// Get all unique client tags from active sessions.
@@ -220,7 +239,8 @@ impl Metrics {
         self.sessions_total.fetch_add(1, Ordering::Relaxed);
         self.sessions_active.fetch_add(1, Ordering::Relaxed);
         let now_ms = unix_ms();
-        self.last_session_activity_ms.store(now_ms, Ordering::Relaxed);
+        self.last_session_activity_ms
+            .store(now_ms, Ordering::Relaxed);
         self.session_activity
             .lock()
             .unwrap()
@@ -233,7 +253,8 @@ impl Metrics {
 
     pub fn record_session_activity(&self, session_id: u64) {
         let now_ms = unix_ms();
-        self.last_session_activity_ms.store(now_ms, Ordering::Relaxed);
+        self.last_session_activity_ms
+            .store(now_ms, Ordering::Relaxed);
         if let Some(last) = self.session_activity.lock().unwrap().get_mut(&session_id) {
             *last = now_ms;
         }
@@ -246,17 +267,29 @@ impl Metrics {
 
     pub fn record_append(&self, duration: Duration) {
         self.append_total.fetch_add(1, Ordering::Relaxed);
-        self.latencies.lock().unwrap().append.push(duration_to_ms(duration));
+        self.latencies
+            .lock()
+            .unwrap()
+            .append
+            .push(duration_to_ms(duration));
     }
 
     pub fn record_get_last(&self, duration: Duration) {
         self.get_last_total.fetch_add(1, Ordering::Relaxed);
-        self.latencies.lock().unwrap().get_last.push(duration_to_ms(duration));
+        self.latencies
+            .lock()
+            .unwrap()
+            .get_last
+            .push(duration_to_ms(duration));
     }
 
     pub fn record_get_blob(&self, duration: Duration) {
         self.get_blob_total.fetch_add(1, Ordering::Relaxed);
-        self.latencies.lock().unwrap().get_blob.push(duration_to_ms(duration));
+        self.latencies
+            .lock()
+            .unwrap()
+            .get_blob
+            .push(duration_to_ms(duration));
     }
 
     pub fn record_registry_ingest(&self) {
@@ -268,7 +301,11 @@ impl Metrics {
         if status_code >= 400 {
             self.http_errors_total.fetch_add(1, Ordering::Relaxed);
         }
-        self.latencies.lock().unwrap().http.push(duration_to_ms(duration));
+        self.latencies
+            .lock()
+            .unwrap()
+            .http
+            .push(duration_to_ms(duration));
     }
 
     pub fn record_error(&self, kind: &str) {
@@ -367,7 +404,11 @@ impl Metrics {
         }
     }
 
-    fn collect_stats(&self, store: &mut Store, registry: &Registry) -> (MemoryMetrics, StorageMetrics, ObjectMetrics) {
+    fn collect_stats(
+        &self,
+        store: &mut Store,
+        registry: &Registry,
+    ) -> (MemoryMetrics, StorageMetrics, ObjectMetrics) {
         let mut system = self.system.lock().unwrap();
         system.refresh_memory();
         system.refresh_process(self.pid);
@@ -376,7 +417,9 @@ impl Metrics {
         let available_bytes = system.available_memory().saturating_mul(1024);
         let free_bytes = system.free_memory().saturating_mul(1024);
         // cached_memory() was removed in sysinfo 0.30+, calculate as total - available - free
-        let cached_bytes = total_bytes.saturating_sub(available_bytes).saturating_sub(free_bytes);
+        let cached_bytes = total_bytes
+            .saturating_sub(available_bytes)
+            .saturating_sub(free_bytes);
         let swap_total_bytes = system.total_swap().saturating_mul(1024);
         let swap_free_bytes = system.free_swap().saturating_mul(1024);
 
@@ -798,11 +841,7 @@ fn disk_space_for_path(path: &PathBuf) -> (u64, u64) {
             let total = disk.total_space();
             let free = disk.available_space();
             let candidate = (total, free, match_len);
-            if best_match
-                .as_ref()
-                .map(|b| match_len > b.2)
-                .unwrap_or(true)
-            {
+            if best_match.as_ref().map(|b| match_len > b.2).unwrap_or(true) {
                 best_match = Some(candidate);
             }
         }

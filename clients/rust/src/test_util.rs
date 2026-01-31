@@ -24,7 +24,8 @@ pub fn load_fixture(name: &str) -> Fixture {
     let path = dir.join(format!("{name}.json"));
     let data = std::fs::read_to_string(&path)
         .unwrap_or_else(|err| panic!("failed to read fixture {name}: {err}"));
-    serde_json::from_str(&data).unwrap_or_else(|err| panic!("failed to parse fixture {name}: {err}"))
+    serde_json::from_str(&data)
+        .unwrap_or_else(|err| panic!("failed to parse fixture {name}: {err}"))
 }
 
 #[cfg(test)]

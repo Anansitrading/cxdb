@@ -4,9 +4,9 @@
 use std::collections::BTreeMap;
 
 use rmpv::Value;
-use serde_value::Value as SerdeValue;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde_value::Value as SerdeValue;
 
 use crate::error::{Error, Result};
 
@@ -31,7 +31,9 @@ pub fn decode_msgpack(data: &[u8]) -> Result<BTreeMap<u64, Value>> {
     let mut out = BTreeMap::new();
     for (k, v) in map {
         let key = match k {
-            Value::Integer(i) => i.as_u64().ok_or_else(|| Error::invalid_response("invalid map key"))?,
+            Value::Integer(i) => i
+                .as_u64()
+                .ok_or_else(|| Error::invalid_response("invalid map key"))?,
             Value::String(s) => s
                 .as_str()
                 .and_then(|s| s.parse::<u64>().ok())
@@ -71,7 +73,6 @@ pub fn DecodeMsgpack(data: &[u8]) -> Result<BTreeMap<u64, Value>> {
 pub fn DecodeMsgpackInto<T: DeserializeOwned>(data: &[u8]) -> Result<T> {
     decode_msgpack_into(data)
 }
-
 
 fn normalize_map_keys_to_string(value: &mut Value) {
     match value {

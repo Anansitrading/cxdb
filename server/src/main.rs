@@ -8,6 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
+use byteorder::WriteBytesExt;
 use cxdb_server::config::Config;
 use cxdb_server::error::{Result, StoreError};
 use cxdb_server::events::{EventBus, StoreEvent};
@@ -16,14 +17,13 @@ use cxdb_server::metrics::Metrics;
 use cxdb_server::metrics::SessionTracker;
 use cxdb_server::protocol::{
     encode_append_ack, encode_attach_fs_resp, encode_ctx_create_resp, encode_error,
-    encode_hello_resp, encode_put_blob_resp, parse_append_turn, parse_attach_fs,
-    parse_ctx_create, parse_ctx_fork, parse_get_blob, parse_get_head, parse_get_last, parse_hello,
-    parse_put_blob, read_frame, write_frame, MsgType,
+    encode_hello_resp, encode_put_blob_resp, parse_append_turn, parse_attach_fs, parse_ctx_create,
+    parse_ctx_fork, parse_get_blob, parse_get_head, parse_get_last, parse_hello, parse_put_blob,
+    read_frame, write_frame, MsgType,
 };
 use cxdb_server::registry::Registry;
 use cxdb_server::s3_sync::{S3Sync, S3SyncConfig, S3SyncHandle};
 use cxdb_server::store::Store;
-use byteorder::WriteBytesExt;
 
 fn main() -> Result<()> {
     // Create tokio runtime for async S3 operations
@@ -68,7 +68,9 @@ fn main() -> Result<()> {
     };
 
     let store = Arc::new(Mutex::new(Store::open(&config.data_dir)?));
-    let registry = Arc::new(Mutex::new(Registry::open(&config.data_dir.join("registry"))?));
+    let registry = Arc::new(Mutex::new(Registry::open(
+        &config.data_dir.join("registry"),
+    )?));
     let metrics = Arc::new(Metrics::new(config.data_dir.clone()));
     let session_tracker = Arc::new(SessionTracker::new());
     let event_bus = Arc::new(EventBus::new());
@@ -112,7 +114,14 @@ fn main() -> Result<()> {
                 let event_bus = Arc::clone(&event_bus);
                 let peer_addr_str = peer_addr.to_string();
                 thread::spawn(move || {
-                    if let Err(err) = handle_client(stream, store, metrics, session_tracker, event_bus, peer_addr_str) {
+                    if let Err(err) = handle_client(
+                        stream,
+                        store,
+                        metrics,
+                        session_tracker,
+                        event_bus,
+                        peer_addr_str,
+                    ) {
                         eprintln!("connection error: {err}");
                     }
                 });
@@ -173,7 +182,11 @@ fn handle_client(
                 // Register session with client tag and peer address
                 if !client_tag_received {
                     client_tag = hello.client_tag.clone();
-                    session_tracker.register(session_id, hello.client_tag.clone(), Some(peer_addr.clone()));
+                    session_tracker.register(
+                        session_id,
+                        hello.client_tag.clone(),
+                        Some(peer_addr.clone()),
+                    );
                     client_tag_received = true;
 
                     // Publish ClientConnected event

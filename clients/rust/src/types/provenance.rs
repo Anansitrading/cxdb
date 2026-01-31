@@ -153,7 +153,10 @@ pub fn capture_process_provenance(
     p
 }
 
-pub fn new_provenance(base: Option<&Provenance>, opts: impl IntoIterator<Item = ProvenanceOption>) -> Provenance {
+pub fn new_provenance(
+    base: Option<&Provenance>,
+    opts: impl IntoIterator<Item = ProvenanceOption>,
+) -> Provenance {
     let mut p = if let Some(base) = base {
         let mut cloned = base.clone();
         if let Some(env) = &base.env_vars {
@@ -183,7 +186,10 @@ pub fn with_spawn_reason(reason: impl Into<String>) -> ProvenanceOption {
     Arc::new(move |p| p.spawn_reason = reason.clone())
 }
 
-pub fn with_trace_context(trace_id: impl Into<String>, span_id: impl Into<String>) -> ProvenanceOption {
+pub fn with_trace_context(
+    trace_id: impl Into<String>,
+    span_id: impl Into<String>,
+) -> ProvenanceOption {
     let trace_id = trace_id.into();
     let span_id = span_id.into();
     Arc::new(move |p| {
@@ -197,7 +203,11 @@ pub fn with_correlation_id(id: impl Into<String>) -> ProvenanceOption {
     Arc::new(move |p| p.correlation_id = id.clone())
 }
 
-pub fn with_on_behalf_of(user_id: impl Into<String>, source: impl Into<String>, email: impl Into<String>) -> ProvenanceOption {
+pub fn with_on_behalf_of(
+    user_id: impl Into<String>,
+    source: impl Into<String>,
+    email: impl Into<String>,
+) -> ProvenanceOption {
     let user_id = user_id.into();
     let source = source.into();
     let email = email.into();
@@ -208,7 +218,11 @@ pub fn with_on_behalf_of(user_id: impl Into<String>, source: impl Into<String>, 
     })
 }
 
-pub fn with_writer_identity(method: impl Into<String>, subject: impl Into<String>, issuer: impl Into<String>) -> ProvenanceOption {
+pub fn with_writer_identity(
+    method: impl Into<String>,
+    subject: impl Into<String>,
+    issuer: impl Into<String>,
+) -> ProvenanceOption {
     let method = method.into();
     let subject = subject.into();
     let issuer = issuer.into();
@@ -220,7 +234,8 @@ pub fn with_writer_identity(method: impl Into<String>, subject: impl Into<String
 }
 
 pub fn with_env_vars(allowlist: Option<Vec<String>>) -> ProvenanceOption {
-    let allowlist = allowlist.unwrap_or_else(|| DefaultEnvAllowlist.iter().map(|s| s.to_string()).collect());
+    let allowlist =
+        allowlist.unwrap_or_else(|| DefaultEnvAllowlist.iter().map(|s| s.to_string()).collect());
     Arc::new(move |p| {
         let env = capture_env_vars(&allowlist);
         p.env_vars = if env.is_empty() { None } else { Some(env) };
@@ -236,7 +251,11 @@ pub fn with_sdk(name: impl Into<String>, version: impl Into<String>) -> Provenan
     })
 }
 
-pub fn with_service(name: impl Into<String>, version: impl Into<String>, instance_id: impl Into<String>) -> ProvenanceOption {
+pub fn with_service(
+    name: impl Into<String>,
+    version: impl Into<String>,
+    instance_id: impl Into<String>,
+) -> ProvenanceOption {
     let name = name.into();
     let version = version.into();
     let instance_id = instance_id.into();

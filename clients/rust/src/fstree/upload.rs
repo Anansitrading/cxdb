@@ -65,7 +65,11 @@ impl Snapshot {
     }
 }
 
-fn upload_blob(ctx: &RequestContext, client: &Client, data: Vec<u8>) -> Result<bool, crate::error::Error> {
+fn upload_blob(
+    ctx: &RequestContext,
+    client: &Client,
+    data: Vec<u8>,
+) -> Result<bool, crate::error::Error> {
     let result = client.put_blob(ctx, &PutBlobRequest { data })?;
     Ok(result.was_new)
 }

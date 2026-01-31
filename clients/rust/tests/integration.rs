@@ -13,6 +13,8 @@ fn integration_create_context_smoke() {
     let addr = std::env::var("CXDB_TEST_ADDR").unwrap_or_else(|_| "127.0.0.1:9009".to_string());
     let client = dial(&addr, Vec::new()).expect("dial failed");
     let ctx = RequestContext::background();
-    let head = client.create_context(&ctx, 0).expect("create context failed");
+    let head = client
+        .create_context(&ctx, 0)
+        .expect("create context failed");
     assert!(head.context_id > 0);
 }

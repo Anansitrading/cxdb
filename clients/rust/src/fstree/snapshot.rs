@@ -5,7 +5,9 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 
 use super::capture::deserialize_tree;
-use super::types::{EntryKindDirectory, EntryKindFile, EntryKindSymlink, Snapshot, SnapshotDiff, TreeEntry};
+use super::types::{
+    EntryKindDirectory, EntryKindFile, EntryKindSymlink, Snapshot, SnapshotDiff, TreeEntry,
+};
 use super::{FstreeError, FstreeErrorKind};
 
 impl Snapshot {
@@ -72,7 +74,10 @@ impl Snapshot {
         Ok(paths)
     }
 
-    pub fn get_file_at_path(&self, path: &str) -> Result<Option<(TreeEntry, Option<File>)>, FstreeError> {
+    pub fn get_file_at_path(
+        &self,
+        path: &str,
+    ) -> Result<Option<(TreeEntry, Option<File>)>, FstreeError> {
         let parts = split_path(path);
         if parts.is_empty() {
             return Err(FstreeError::new(FstreeErrorKind::Other, "empty path"));
@@ -90,7 +95,12 @@ impl Snapshot {
             }
             let found = match found {
                 Some(entry) => entry,
-                None => return Err(FstreeError::new(FstreeErrorKind::Other, format!("path not found: {path}"))),
+                None => {
+                    return Err(FstreeError::new(
+                        FstreeErrorKind::Other,
+                        format!("path not found: {path}"),
+                    ))
+                }
             };
 
             if idx == parts.len() - 1 {
@@ -102,7 +112,10 @@ impl Snapshot {
             }
 
             if found.kind != EntryKindDirectory {
-                return Err(FstreeError::new(FstreeErrorKind::Other, format!("not a directory: {}", part)));
+                return Err(FstreeError::new(
+                    FstreeErrorKind::Other,
+                    format!("not a directory: {}", part),
+                ));
             }
             current_hash = found.hash;
         }

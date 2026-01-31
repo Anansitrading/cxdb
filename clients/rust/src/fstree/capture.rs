@@ -11,9 +11,10 @@ use blake3::Hasher;
 
 use crate::encoding::encode_msgpack;
 
-use super::options::{SnapshotOption, Options};
+use super::options::{Options, SnapshotOption};
 use super::types::{
-    EntryKindDirectory, EntryKindFile, EntryKindSymlink, FileRef, Snapshot, SnapshotStats, TreeEntry,
+    EntryKindDirectory, EntryKindFile, EntryKindSymlink, FileRef, Snapshot, SnapshotStats,
+    TreeEntry,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -59,7 +60,10 @@ pub const ErrCyclicLink: FstreeErrorKind = FstreeErrorKind::CyclicLink;
 
 pub type Result<T> = std::result::Result<T, FstreeError>;
 
-pub fn capture(root: impl AsRef<Path>, opts: impl IntoIterator<Item = SnapshotOption>) -> Result<Snapshot> {
+pub fn capture(
+    root: impl AsRef<Path>,
+    opts: impl IntoIterator<Item = SnapshotOption>,
+) -> Result<Snapshot> {
     let start = SystemTime::now();
     let abs_root = fs::canonicalize(root.as_ref())
         .map_err(|err| FstreeError::new(FstreeErrorKind::Io, err.to_string()))?;
@@ -155,7 +159,10 @@ impl Builder {
             let child_abs = abs_path.join(&name);
             let rel_str = child_rel.to_string_lossy();
 
-            if self.options.should_exclude(&rel_str, entry.file_type().map(|t| t.is_dir()).unwrap_or(false)) {
+            if self.options.should_exclude(
+                &rel_str,
+                entry.file_type().map(|t| t.is_dir()).unwrap_or(false),
+            ) {
                 continue;
             }
 
