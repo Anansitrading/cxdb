@@ -8,10 +8,45 @@ import { join } from 'path';
 import net from 'net';
 
 export interface ServerHandle {
-  process: ChildProcess;
+  process: ChildProcess | null;
   binaryPort: number;
   httpPort: number;
   dataDir: string;
+  external: boolean;
+}
+
+/**
+ * Check if we should use an external server (set via CXDB_TEST_ADDR env var).
+ */
+export function useExternalServer(): boolean {
+  return !!globalThis.process.env.CXDB_TEST_ADDR;
+}
+
+/**
+ * Get external server configuration from environment variables.
+ * Returns null if external server is not configured.
+ */
+export function getExternalServerConfig(): { binaryPort: number; httpPort: number } | null {
+  const addr = globalThis.process.env.CXDB_TEST_ADDR;
+  const httpAddr = globalThis.process.env.CXDB_TEST_HTTP_ADDR;
+
+  if (!addr) {
+    return null;
+  }
+
+  // Parse binary port from CXDB_TEST_ADDR (e.g., "localhost:9009")
+  const binaryPort = parseInt(addr.split(':')[1], 10);
+
+  // Parse HTTP port from CXDB_TEST_HTTP_ADDR (e.g., "http://localhost:9010")
+  let httpPort = 9010; // default
+  if (httpAddr) {
+    const match = httpAddr.match(/:(\d+)$/);
+    if (match) {
+      httpPort = parseInt(match[1], 10);
+    }
+  }
+
+  return { binaryPort, httpPort };
 }
 
 /**
@@ -77,9 +112,25 @@ export async function waitForServer(port: number, timeout: number = 15000): Prom
 }
 
 /**
- * Start the Rust CXDB server.
+ * Start the Rust CXDB server, or return a handle to an external server if configured.
  */
 export async function startServer(): Promise<ServerHandle> {
+  // Check for external server configuration
+  const externalConfig = getExternalServerConfig();
+  if (externalConfig) {
+    console.log(`Using external server at localhost:${externalConfig.binaryPort} (HTTP: ${externalConfig.httpPort})`);
+    // Wait for external server to be ready
+    await waitForPort(externalConfig.binaryPort);
+    await waitForServer(externalConfig.httpPort);
+    return {
+      process: null,
+      binaryPort: externalConfig.binaryPort,
+      httpPort: externalConfig.httpPort,
+      dataDir: '',
+      external: true,
+    };
+  }
+
   const projectRoot = join(__dirname, '..', '..', '..');
   const serverBinary = join(projectRoot, 'target', 'release', 'cxdb-server');
 
@@ -124,6 +175,7 @@ export async function startServer(): Promise<ServerHandle> {
     binaryPort,
     httpPort,
     dataDir,
+    external: false,
   };
 }
 
@@ -131,14 +183,23 @@ export async function startServer(): Promise<ServerHandle> {
  * Stop the server and clean up.
  */
 export function stopServer(handle: ServerHandle): void {
+  // Don't stop external servers
+  if (handle.external) {
+    return;
+  }
+
   // Kill the process
-  handle.process.kill('SIGTERM');
+  if (handle.process) {
+    handle.process.kill('SIGTERM');
+  }
 
   // Clean up data directory
-  try {
-    rmSync(handle.dataDir, { recursive: true, force: true });
-  } catch {
-    // Ignore cleanup errors
+  if (handle.dataDir) {
+    try {
+      rmSync(handle.dataDir, { recursive: true, force: true });
+    } catch {
+      // Ignore cleanup errors
+    }
   }
 }
 

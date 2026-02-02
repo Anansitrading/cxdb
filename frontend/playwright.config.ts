@@ -3,11 +3,17 @@
 
 import { defineConfig, devices } from '@playwright/test';
 
+// When using external servers (CXDB_TEST_ADDR is set), skip local server management
+const useExternalServer = !!process.env.CXDB_TEST_ADDR;
+
 /**
  * Playwright configuration for CXDB integration tests.
  *
  * These tests validate the full stack: Rust service, Go writer, and React frontend.
  * Tests run sequentially (workers: 1) because each test needs its own server instance.
+ *
+ * When CXDB_TEST_ADDR is set (e.g., in CI with Docker Compose), tests use the external
+ * servers instead of spawning local instances.
  */
 export default defineConfig({
   testDir: './tests',
@@ -55,9 +61,9 @@ export default defineConfig({
     timeout: 120000, // 2 minutes to start
   },
 
-  // Global setup/teardown for building binaries
-  globalSetup: './tests/global-setup.ts',
-  globalTeardown: './tests/global-teardown.ts',
+  // Global setup/teardown for building binaries (skipped when using external servers)
+  globalSetup: useExternalServer ? undefined : './tests/global-setup.ts',
+  globalTeardown: useExternalServer ? undefined : './tests/global-teardown.ts',
 
   // Test projects (browsers)
   projects: [

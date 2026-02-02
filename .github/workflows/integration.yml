@@ -74,3 +74,112 @@ jobs:
         run: |
           cd deploy/docker-compose
           docker compose -f docker-compose.test.yml down -v
+
+  playwright:
+    name: Playwright Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker images
+        run: |
+          docker build --platform linux/amd64 -t cxdb/cxdb:test .
+          docker build --platform linux/amd64 -f gateway/Dockerfile -t cxdb/gateway:test .
+
+      - name: Start CXDB with Docker Compose
+        run: |
+          cd deploy/docker-compose
+          cp .env.example .env
+          # Set test credentials
+          sed -i 's/your-google-client-id/test-client-id/g' .env
+          sed -i 's/your-client-secret/test-client-secret/g' .env
+          sed -i 's/example.com/localhost/g' .env
+          sed -i 's/your-64-character-hex-secret-here/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef/g' .env
+          # Use test compose file with pre-built images
+          docker compose -f docker-compose.test.yml up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for CXDB server..."
+          timeout 60 bash -c 'until curl -sf http://localhost:9010/healthz; do sleep 2; done'
+          echo "Waiting for gateway..."
+          timeout 60 bash -c 'until curl -sf http://localhost:8080/healthz; do sleep 2; done'
+          echo "Services are healthy!"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: cd frontend && pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: cd frontend && pnpm exec playwright install --with-deps chromium
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build Go writer
+        run: |
+          cd examples/basic-go
+          go build -o cxdb-writer .
+
+      - name: Run Playwright tests
+        run: cd frontend && pnpm test
+        env:
+          CXDB_TEST_ADDR: localhost:9009
+          CXDB_TEST_HTTP_ADDR: http://localhost:9010
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+      - name: Collect logs
+        if: always()
+        run: |
+          mkdir -p logs
+          cd deploy/docker-compose
+          docker compose -f docker-compose.test.yml logs cxdb-server > ../../logs/server.log
+          docker compose -f docker-compose.test.yml logs cxdb-gateway > ../../logs/gateway.log
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-logs
+          path: logs/
+          retention-days: 7
+
+      - name: Tear down
+        if: always()
+        run: |
+          cd deploy/docker-compose
+          docker compose -f docker-compose.test.yml down -v

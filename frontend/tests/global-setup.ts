@@ -8,8 +8,15 @@ const PROJECT_ROOT = join(__dirname, '..', '..');
 
 /**
  * Global setup: Build the Rust service and Go client before tests run.
+ * Skipped when using external servers (CXDB_TEST_ADDR is set).
  */
 async function globalSetup() {
+  // Skip building when using external servers (e.g., in CI with Docker Compose)
+  if (process.env.CXDB_TEST_ADDR) {
+    console.log('Using external server (CXDB_TEST_ADDR is set). Skipping binary builds.');
+    return;
+  }
+
   console.log('Building Rust service...');
   try {
     execSync('cargo build --release', {
