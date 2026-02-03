@@ -151,3 +151,10 @@ build/
 
 # Ignore evidence directories from internal workflow
 .scratch/
+
+# Built binaries at repo root
+/cxdb-writer
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+*.tsbuildinfo

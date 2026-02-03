@@ -145,8 +145,8 @@ jobs:
 
       - name: Build Go writer
         run: |
-          cd examples/basic-go
-          go build -o cxdb-writer .
+          cd tools/cxdb-writer
+          go build -o ../../cxdb-writer .
 
       - name: Run Playwright tests
         run: cd frontend && pnpm test
