@@ -138,6 +138,26 @@ export const test = base.extend<TestFixtures>({
       });
     });
 
+    // Intercept /healthz requests and redirect them to the test server
+    // This is critical - without it, health checks go to the hardcoded port 9010
+    // instead of the test server's dynamic port, causing fetchContextsData() to never run
+    await page.route('**/healthz', async (route) => {
+      try {
+        const response = await fetch(`http://127.0.0.1:${cxdbServer.httpPort}/healthz`);
+        await route.fulfill({
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: Buffer.from(await response.arrayBuffer()),
+        });
+      } catch {
+        // If health check fails, return 503
+        await route.fulfill({
+          status: 503,
+          body: 'Service Unavailable',
+        });
+      }
+    });
+
     await use(page);
   },
 });
