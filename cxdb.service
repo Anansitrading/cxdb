@@ -1,0 +1,27 @@
+[Unit]
+Description=CXDB - AI Context Store with Turn DAG and Blob CAS
+Documentation=https://github.com/Anansitrading/cxdb
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=devuser
+Group=devuser
+ExecStart=/usr/local/bin/cxdb-server
+Environment=CXDB_DATA_DIR=/home/devuser/.cxdb/data
+Environment=CXDB_BIND=127.0.0.1:9009
+Environment=CXDB_HTTP_BIND=127.0.0.1:9010
+Environment=CXDB_LOG_LEVEL=info
+Environment=CXDB_LOG_FORMAT=text
+Environment=CXDB_ENABLE_METRICS=true
+Environment=CXDB_MAX_BLOB_SIZE=10485760
+Environment=CXDB_COMPRESSION_LEVEL=3
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cxdb
+
+[Install]
+WantedBy=multi-user.target

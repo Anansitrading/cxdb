@@ -1,0 +1,17 @@
+[Unit]
+Description=cxdb Zulip Bot - Conversation Branching Interface
+After=network.target cxdb.service
+Wants=cxdb.service
+
+[Service]
+Type=simple
+User=devuser
+WorkingDirectory=/home/devuser/cxdb
+ExecStart=/usr/bin/python3 /home/devuser/cxdb/cxdb_bot.py
+Environment=PYTHONPATH=/home/devuser/Oracle-Cortex/scripts
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
